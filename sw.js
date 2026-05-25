@@ -1,45 +1,60 @@
-const CACHE_NAME = 'listes-compactes-v1';
+const CACHE_NAME = 'compact-lists-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
   'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js',
-  'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dd.png',
-  'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/192x192/1f4dd.png',
-  'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/512x512/1f4dd.png'
+  'https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js'
 ];
 
-// Installation du Service Worker et mise en cache des ressources
-self.addEventListener('install', (e) => {
-  e.waitUntil(
+self.addEventListener('install', (event) => {
+  event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('SW : Mise en cache des ressources de base');
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
-  );
+    }).then(() => self.skipWaiting())\n  );
 });
 
-// Nettoyage des anciens caches si une mise à jour a lieu
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('SW : Nettoyage de l\'ancien cache', cache);
+            return caches.delete(cache);
           }
         })
       );
-    }).then(() => self.clients.claim())
-  );
+    }).then(() => self.clients.claim())\n  );
 });
 
-// Stratégie Réseau d'abord, repli sur le Cache (Network-first, fallback to Cache)
-// Idéal pour récupérer d'éventuelles corrections d'app.js tout en restant 100% fonctionnel hors ligne
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    fetch(e.request).catch(() => {
-      return caches.match(e.request);
-    })
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return new Response('Connexion Internet requise pour cette ressource.', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers()
+          });
+        });
+      })
   );
 });

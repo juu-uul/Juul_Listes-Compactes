@@ -3,323 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listes Compactes Pro</title>
-    
-    <!-- Liaison du Manifest PWA -->
-    <link rel="manifest" href="manifest.json">
-    
+    <title>Ma PWA de Listes Compactes</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#1e1e2e">
     <style>
         :root {
-            --primary: #0056b3;
-            --background: #f8f9fa;
-            --surface: #ffffff;
-            --text: #212529;
-            --text-muted: #6c757d;
-            --gray-border: #dee2e6;
+            --bg: #eaecef;                 /* Fond d'écran global en version ordinateur */
+            --app-bg: #f8f9fa;             /* Fond de l'application */
+            --surface: #ffffff;            /* Fond des blocs de liste et d'inputs */
+            --text: #212529;               /* Couleur principale du texte */
+            --text-muted: #6c757d;         /* Pour les éléments secondaires (ex: les dates) */
+            --border: #dee2e6;
+            --primary: #0d6efd;
             --danger: #dc3545;
-            --success: #28a745;
-            --warning-bg: #fff3cd;
-            --warning-border: #ffeeba;
-            --warning-text: #856404;
-            --priority-bg: #fff5f5;
-            --priority-border: #ffc9c9;
+            --priority-bg: #fde8e8;        /* Rouge très clair pour le fond (mode clair) */
+            --priority-border: #f8b4b4;    /* Bordure rouge douce */
+            --priority-text: #9b1c1c;      /* Texte rouge foncé pour une lisibilité maximale */
+            --shadow: rgba(0, 0, 0, 0.05);
         }
-
-        /* --- THEME SOMBRE (ACTIVÉ PAR LA CLASSE CORRESPONDANTE) --- */
-        body.dark-theme {
-            --primary: #3b82f6;
-            --background: #121212;
-            --surface: #1e1e1e;
-            --text: #e5e7eb;
-            --text-muted: #9ca3af;
-            --gray-border: #374151;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning-bg: #2e2510;
-            --warning-border: #4d3d19;
-            --warning-text: #f59e0b;
-            --priority-bg: #2d1919;
-            --priority-border: #4c1d1d;
+        .dark-theme {
+            --bg: #121212;                 /* Fond d'écran extérieur sombre */
+            --app-bg: #1a1a1a;             /* Fond de l'application sur PC */
+            --surface: #242424;            /* Fond des listes pour créer du relief */
+            --text: #f5f5f5;               /* Blanc cassé à fort contraste */
+            --text-muted: #b0b0b0;         /* Gris clair parfaitement lisible sur fond noir */
+            --border: #3d3d3d;
+            --primary: #3b82f6;            /* Bleu plus électrique adapté au mode sombre */
+            --danger: #f87171;
+            --priority-bg: #3b1414;        /* Rouge brique très sombre pour le fond */
+            --priority-border: #7f1d1d;    /* Bordure rouge foncé */
+            --priority-text: #fca5a5;      /* Rouge pastel clair offrant un excellent contraste */
+            --shadow: rgba(0, 0, 0, 0.4);
         }
         
-        body.dark-theme input[type="text"] {
-            background-color: #2d2d2d;
-            color: var(--text);
-            border-color: var(--gray-border) !important;
-        }
-        body.dark-theme .list-header {
-            background: #2d2d2d !important;
-        }
-        body.dark-theme .trash-header {
-            background: #3f2225 !important;
-        }
-        body.dark-theme .trash-block {
-            border-color: #5a2a2d !important;
-        }
-        body.dark-theme .ghost-list, body.dark-theme .ghost-note {
-            background: #1e3a8a !important;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--background);
+            background-color: var(--bg);
             color: var(--text);
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 5px;
-            font-size: 13px;
-        }
-
-        /* --- BARRE DE RECHERCHE FIXE ET OUTILS --- */
-        .search-top-bar {
+            margin: 0;
+            padding: 0;
             display: flex;
-            gap: 5px;
-            margin-bottom: 6px;
-            align-items: center;
-        }
-        .search-container {
-            display: flex;
-            flex: 1;
-        }
-        .search-input {
-            width: 100%;
-            padding: 4px 8px;
-            font-size: 12px;
-            border: 1px solid var(--gray-border);
-            border-radius: 3px;
-            background: var(--surface);
-            color: var(--text);
-        }
-        .btn-mini {
-            background: none;
-            color: var(--text-muted);
-            border: 1px dashed var(--gray-border);
-            padding: 4px 8px;
-            font-size: 12px;
-            border-radius: 3px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .btn-mini:hover {
-            background: var(--surface);
-            color: var(--primary);
-        }
-
-        /* --- PANNEAU DE CONTRÔLE PLIABLE --- */
-        .control-panel {
-            display: block;
-        }
-        .control-panel.hidden {
-            display: none;
-        }
-
-        .card {
-            background: var(--surface);
-            padding: 6px 8px;
-            border: 1px solid var(--gray-border);
-            border-radius: 4px;
-            margin-bottom: 6px;
+            justify-content: center;
         }
         
-        .backup-alert {
-            background-color: var(--warning-bg);
-            border: 1px solid var(--warning-border);
-            color: var(--warning-text);
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 500;
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            min-height: 100vh;
+            background-color: var(--app-bg);
+            box-shadow: 0 0 15px var(--shadow);
+            box-sizing: border-box;
+            padding: 8px 8px 20px 8px;
         }
-
-        .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-        }
-        .input-group {
-            display: flex;
-            gap: 5px;
-            flex: 1;
-        }
-        .backup-group {
+        
+        .hidden { display: none !important; }
+        
+        .search-bar-container {
             display: flex;
             gap: 4px;
+            margin-bottom: 8px;
         }
-        input[type="text"] {
-            flex: 1;
-            padding: 4px 8px;
-            border: 1px solid var(--gray-border);
+        .search-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+        }
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 4px 26px 4px 6px;
+            border: 1px solid var(--border);
             border-radius: 3px;
+            background: var(--surface);
+            color: var(--text);
+        }
+        .btn-action-header {
+            padding: 4px 6px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: var(--surface);
+            color: var(--text);
             font-size: 13px;
+            white-space: nowrap;
         }
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 4px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        button:hover { opacity: 0.9; }
-        
-        .btn-secondary { background-color: #6c757d; }
-        .btn-success { background-color: var(--success); }
-        .btn-theme-toggle { background-color: #6c757d; padding: 4px 8px; }
-        
-        /* Listes */
+
         .list-block {
             background: var(--surface);
-            border: 1px solid var(--gray-border);
+            border: 1px solid var(--border);
             border-radius: 4px;
-            margin-bottom: 6px;
+            margin-bottom: 8px; 
+            padding: 6px 8px;   
         }
         .list-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 8px;
-            background: #f1f3f5;
-            cursor: grab;
-            user-select: none;
+            font-weight: bold;
+            margin-bottom: 4px; 
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 3px;
         }
         .list-title-zone {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-weight: 600;
+            flex-grow: 1;
         }
-        .list-title-input, .note-title-input {
-            font-family: inherit;
-            font-size: 13px;
-            padding: 1px 4px;
-            background-color: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--primary);
-            border-radius: 2px;
-        }
-        .list-title-input { font-weight: 600; }
-        .note-title-input { width: 90%; font-size: 13px; margin: 2px 0; }
-        
-        .btn-toggle {
-            background: none;
-            color: var(--text-muted);
-            padding: 2px 5px;
-        }
-        
-        .list-content {
-            padding: 6px;
-            border-top: 1px solid var(--gray-border);
-        }
-        .list-content.collapsed { display: none; }
-        
-        /* Notes standard */
-        ul.notes-dropzone {
+        .notes-dropzone {
             list-style: none;
             padding: 0;
-            margin: 4px 0 0 0;
+            margin: 0;
             min-height: 20px;
         }
-        li.note-item {
+        
+        .note-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--surface);
-            border: 1px solid var(--gray-border);
-            padding: 3px 6px;
-            margin-bottom: 3px;
+            background: var(--app-bg);
+            border: 1px solid var(--border);
+            padding: 3px 6px; 
+            margin-bottom: 3px; 
             border-radius: 3px;
-            border-left: 3px solid var(--primary);
-            cursor: grab;
+            color: var(--text);
         }
         
-        li.note-item.priority-high {
-            border-left-color: var(--danger);
-            background-color: var(--priority-bg);
-            border-top-color: var(--priority-border);
-            border-right-color: var(--priority-border);
-            border-bottom-color: var(--priority-border);
+        .priority-high {
+            background-color: var(--priority-bg) !important;
+            border-color: var(--priority-border) !important;
+            color: var(--priority-text) !important;
         }
-
+        
         .note-main {
             display: flex;
             flex-direction: column;
-            gap: 1px;
-            flex: 1;
-            cursor: pointer;
+            flex-grow: 1;
         }
         .note-date {
-            font-size: 10px;
+            font-size: 9px; 
             color: var(--text-muted);
-            user-select: none;
+            margin-top: 2px;
         }
         
-        /* Corbeille */
-        .trash-block { border-color: #f5c6cb; margin-top: 20px; }
-        .trash-header { background: #f8d7da; }
-        .trash-item { border-left-color: var(--danger); }
-        .trash-item .note-main { cursor: default; }
-
-        .ghost-list { opacity: 0.3; background: #e7f5ff; }
-        .ghost-note { opacity: 0.4; background: #e7f5ff; }
-        .delete-btn { background-color: var(--danger); padding: 1px 5px; font-size: 11px; }
-        .btn-restore { background-color: #28a745; padding: 1px 5px; font-size: 11px; margin-right: 3px; }
-
-        footer {
-            margin-top: 20px;
-            padding: 6px 0;
-            border-top: 1px dashed var(--gray-border);
-            color: var(--text-muted);
+        .input-group {
+            display: flex;
+            margin-bottom: 4px; 
+        }
+        .input-group input {
+            flex-grow: 1;
+            padding: 4px 6px; 
+            border: 1px solid var(--border);
+            border-radius: 3px 0 0 3px;
+            background: var(--surface);
+            color: var(--text);
+        }
+        .input-group button {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-left: none;
+            border-radius: 0 3px 3px 0;
+            background: var(--primary);
+            color: #ffffff;
+            font-weight: bold;
+        }
+        
+        .collapsed { display: none !important; }
+        .ghost-list { opacity: 0.4; background: #cbd5e1; }
+        .ghost-note { opacity: 0.5; background: #94a3b8; }
+        
+        .control-panel-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .backup-alert {
             font-size: 11px;
+            padding: 4px 8px;
+            margin-bottom: 6px;
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+            color: #856404;
+            border-radius: 3px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        button { cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="search-top-bar">
-        <div class="search-container">
-            <input type="text" id="input-search" class="search-input" placeholder="🔍 Filtrer les tâches ou listes..." autocomplete="off">
+    <div class="app-container">
+        <div id="alert-container"></div>
+
+        <div class="search-bar-container">
+            <div class="search-input-wrapper">
+                <input type="text" id="input-search" placeholder="🔍 Rechercher une note ou liste..." autocomplete="off">
+                <button id="btn-clear-search" onclick="clearSearch()" class="hidden" style="position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 8px; z-index: 5;">✕</button>
+            </div>
+            <button class="btn-action-header" onclick="toggleAllLists()">↕️ Tout</button>
+            <button class="btn-action-header" onclick="toggleControlPanel()">⚙️ Menu</button>
         </div>
-        <button id="btn-toggle-panel" class="btn-mini" onclick="toggleControlPanel()">⚙️ Configuration</button>
-    </div>
 
-    <div id="alert-container"></div>
+        <div id="control-panel" class="control-panel-box hidden">
+            <form id="form-add-list" class="input-group">
+                <input type="text" id="input-list-name" placeholder="Nom de la nouvelle liste..." required autocomplete="off">
+                <button type="submit">Créer Liste</button>
+            </form>
+            <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+                <button id="btn-theme" style="padding: 3px 6px;" onclick="toggleTheme()">🌓 Auto</button>
+                <button style="padding: 3px 6px;" onclick="triggerImport()">📥 Importer</button>
+                <button style="padding: 3px 6px;" onclick="exportData()">📤 Exporter</button>
+                <button id="btn-reset" style="padding: 3px 6px; color: var(--danger)">🗑️ Reset Global</button>
+                <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importData(event)">
+            </div>
+            <p id="backup-timestamps" style="margin: 4px 0 0 0; color: var(--text-muted); font-size:10px;"></p>
 
-    <div id="control-panel" class="control-panel hidden">
-        <div class="card">
-            <div class="header-actions">
-                <form id="form-add-list" class="input-group">
-                    <input type="text" id="input-list-name" placeholder="Nouvelle liste..." required autocomplete="off">
-                    <button type="submit">+ Liste</button>
-                </form>
-                
-                <div class="backup-group">
-                    <button id="btn-theme" onclick="toggleTheme()" class="btn-theme-toggle" title="Changer de thème">🌓 Mode</button>
-                    <button onclick="exportData()" class="btn-secondary" title="Exporter les données en JSON">↑ Exp</button>
-                    <button onclick="triggerImport()" class="btn-success" title="Importer un fichier JSON">↓ Imp</button>
-                    <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="importData(event)">
+            <div id="sync-login-box" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border);">
+                <p style="margin: 0 0 5px 0; font-weight: bold;">🔄 Synchronisation Cloud (CouchDB)</p>
+                <div id="sync-form">
+                    <input type="text" id="sync-url" placeholder="URL hôte (ex: xxxxx-bluemix.cloudantnosqldb.appdomain.cloud)" style="width:100%; padding:4px; margin-bottom:4px; box-sizing:border-box; font-size:11px; background:var(--app-bg); color:var(--text); border:1px solid var(--border); border-radius:3px;">
+                    <input type="text" id="sync-user" placeholder="Clé API / Identifiant" style="width:100%; padding:4px; margin-bottom:4px; box-sizing:border-box; font-size:11px; background:var(--app-bg); color:var(--text); border:1px solid var(--border); border-radius:3px;">
+                    <input type="password" id="sync-pass" placeholder="Mot de passe de la clé API" style="width:100%; padding:4px; margin-bottom:5px; box-sizing:border-box; font-size:11px; background:var(--app-bg); color:var(--text); border:1px solid var(--border); border-radius:3px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="sync-remember" style="vertical-align:middle;"> Se souvenir de moi</label>
+                        <button onclick="setupCloudSync()" style="padding: 3px 8px; font-size:11px; background:var(--primary); color:white; border:none; border-radius:3px; font-weight:bold;">Connecter</button>
+                    </div>
+                </div>
+                <div id="sync-status" class="hidden" style="font-size:11px; display:flex; justify-content:space-between; align-items:center; padding: 2px 0;">
+                    <span style="color: #28a745; font-weight:bold;">🟢 Cloud synchronisé en temps réel</span>
+                    <button onclick="disconnectCloudSync()" style="padding: 2px 5px; font-size:10px; background:none; border:1px solid var(--danger); color:var(--danger); border-radius:3px;">Déconnecter</button>
                 </div>
             </div>
         </div>
+
+        <div id="lists-container"></div>
+        <div id="trash-container"></div>
     </div>
 
-    <div id="lists-container"></div>
-    <div id="trash-container"></div>
-
-    <footer>
-        <div id="backup-timestamps">Dernier export : jamais | Dernier import : jamais</div>
-        <button id="btn-reset" class="btn-secondary" style="opacity: 0.6; padding: 2px 6px;">Remettre à zéro</button>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
