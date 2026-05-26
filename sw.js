@@ -1,11 +1,10 @@
-const CACHE_NAME = 'compact-lists-v3';
+const CACHE_NAME = 'compact-lists-v1.28.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
-  'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js',
-  'https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js'
+  'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -13,7 +12,8 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       console.log('SW : Mise en cache des ressources de base');
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())\n  );
+    }).then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -27,7 +27,8 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    }).then(() => self.clients.claim())\n  );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -52,7 +53,7 @@ self.addEventListener('fetch', (event) => {
           return new Response('Connexion Internet requise pour cette ressource.', {
             status: 503,
             statusText: 'Service Unavailable',
-            headers: new Headers()
+            headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
           });
         });
       })

@@ -18,7 +18,10 @@
             --danger: #dc3545;
             --priority-bg: #fde8e8;        /* Rouge très clair pour le fond (mode clair) */
             --priority-border: #f8b4b4;    /* Bordure rouge douce */
-            --priority-text: #9b1c1c;      /* Texte rouge foncé pour une lisibilité maximale */
+            --priority-text: #9b1c1c;      /* Texte rouge foncé */
+            --question-bg: #fef3c7;        /* Jaune clair pour les questions (mode clair) */
+            --question-border: #fde68a;    /* Bordure jaune douce */
+            --question-text: #92400e;      /* Texte jaune/ambre foncé */
             --shadow: rgba(0, 0, 0, 0.05);
         }
         .dark-theme {
@@ -33,6 +36,9 @@
             --priority-bg: #3b1414;        /* Rouge brique très sombre pour le fond */
             --priority-border: #7f1d1d;    /* Bordure rouge foncé */
             --priority-text: #fca5a5;      /* Rouge pastel clair offrant un excellent contraste */
+            --question-bg: #221c11;        /* Ambre/Marron très sombre et discret */
+            --question-border: #3d301a;    /* Bordure ambre atténuée */
+            --question-text: #cca43b;      /* Jaune or/moutarde mat, beaucoup moins agressif visuellement */
             --shadow: rgba(0, 0, 0, 0.4);
         }
         
@@ -53,7 +59,9 @@
             background-color: var(--app-bg);
             box-shadow: 0 0 15px var(--shadow);
             box-sizing: border-box;
-            padding: 8px 8px 20px 8px;
+            padding: 8px 8px 12px 8px;
+            display: flex;
+            flex-direction: column;
         }
         
         .hidden { display: none !important; }
@@ -131,6 +139,12 @@
             border-color: var(--priority-border) !important;
             color: var(--priority-text) !important;
         }
+
+        .note-question {
+            background-color: var(--question-bg) !important;
+            border-color: var(--question-border) !important;
+            color: var(--question-text) !important;
+        }
         
         .note-main {
             display: flex;
@@ -189,12 +203,26 @@
             justify-content: space-between;
             align-items: center;
         }
+        
+        .app-footer {
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
         button { cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
+
         <div id="alert-container"></div>
 
         <div class="search-bar-container">
@@ -202,7 +230,7 @@
                 <input type="text" id="input-search" placeholder="🔍 Rechercher une note ou liste..." autocomplete="off">
                 <button id="btn-clear-search" onclick="clearSearch()" class="hidden" style="position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 8px; z-index: 5;">✕</button>
             </div>
-            <button class="btn-action-header" onclick="toggleAllLists()">↕️ Tout</button>
+            <button id="btn-toggle-all" class="btn-action-header" onclick="toggleAllLists()">↕️ Replier</button>
             <button class="btn-action-header" onclick="toggleControlPanel()">⚙️ Menu</button>
         </div>
 
@@ -218,32 +246,20 @@
                 <button id="btn-reset" style="padding: 3px 6px; color: var(--danger)">🗑️ Reset Global</button>
                 <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importData(event)">
             </div>
-            <p id="backup-timestamps" style="margin: 4px 0 0 0; color: var(--text-muted); font-size:10px;"></p>
-
-            <div id="sync-login-box" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border);">
-                <p style="margin: 0 0 5px 0; font-weight: bold;">🔄 Synchronisation Cloud (CouchDB)</p>
-                <div id="sync-form">
-                    <input type="text" id="sync-url" placeholder="URL hôte (ex: xxxxx-bluemix.cloudantnosqldb.appdomain.cloud)" style="width:100%; padding:4px; margin-bottom:4px; box-sizing:border-box; font-size:11px; background:var(--app-bg); color:var(--text); border:1px solid var(--border); border-radius:3px;">
-                    <input type="text" id="sync-user" placeholder="Clé API / Identifiant" style="width:100%; padding:4px; margin-bottom:4px; box-sizing:border-box; font-size:11px; background:var(--app-bg); color:var(--text); border:1px solid var(--border); border-radius:3px;">
-                    <input type="password" id="sync-pass" placeholder="Mot de passe de la clé API" style="width:100%; padding:4px; margin-bottom:5px; box-sizing:border-box; font-size:11px; background:var(--app-bg); color:var(--text); border:1px solid var(--border); border-radius:3px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="sync-remember" style="vertical-align:middle;"> Se souvenir de moi</label>
-                        <button onclick="setupCloudSync()" style="padding: 3px 8px; font-size:11px; background:var(--primary); color:white; border:none; border-radius:3px; font-weight:bold;">Connecter</button>
-                    </div>
-                </div>
-                <div id="sync-status" class="hidden" style="font-size:11px; display:flex; justify-content:space-between; align-items:center; padding: 2px 0;">
-                    <span style="color: #28a745; font-weight:bold;">🟢 Cloud synchronisé en temps réel</span>
-                    <button onclick="disconnectCloudSync()" style="padding: 2px 5px; font-size:10px; background:none; border:1px solid var(--danger); color:var(--danger); border-radius:3px;">Déconnecter</button>
-                </div>
-            </div>
         </div>
 
         <div id="lists-container"></div>
         <div id="trash-container"></div>
+
+        <footer class="app-footer">
+            <div id="backup-timestamps"></div>
+            <div id="storage-info"></div>
+            <div class="app-version">Version 1.28.0</div>
+        </footer>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"></script>
     <script src="./app.js"></script>
 </body>
 </html>

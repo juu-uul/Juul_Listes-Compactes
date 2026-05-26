@@ -14,26 +14,47 @@ const listsContainer = document.getElementById('lists-container');
 const trashContainer = document.getElementById('trash-container');
 const alertContainer = document.getElementById('alert-container');
 const backupTimestamps = document.getElementById('backup-timestamps');
+const storageInfo = document.getElementById('storage-info');
 const btnReset = document.getElementById('btn-reset');
 const btnTheme = document.getElementById('btn-theme');
+const btnToggleAll = document.getElementById('btn-toggle-all');
 
-// Initialisation de la base locale PouchDB
-const localDB = new PouchDB('ma_pwa_compact_lists_db');
-let remoteDB = null;
-let syncHandler = null;
-
-let appData = { _id: 'app_state', lists: [], trash: [], trashCollapsed: true, panelCollapsed: true, themeMode: 'auto', lastExport: null, lastImport: null };
+const STORAGE_KEY = 'ma_pwa_compact_lists_data';
+let appData = { lists: [], trash: [], trashCollapsed: true, panelCollapsed: true, themeMode: 'auto', lastExport: null, lastImport: null };
 let searchQuery = '';
 let activeSortableInstances = [];
 
-async function init() {
-    await loadFromPouch();
+function init() {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+        try {
+            appData = JSON.parse(savedData);
+            if (!appData.trash) appData.trash = [];
+            if (appData.lastExport === undefined) appData.lastExport = null;
+            if (appData.lastImport === undefined) appData.lastImport = null;
+            if (appData.panelCollapsed === undefined) appData.panelCollapsed = true;
+            if (appData.themeMode === undefined) appData.themeMode = 'auto';
+            
+            appData.lists.forEach(l => {
+                if (!l.id) l.id = 'list_' + Math.random().toString(36).substr(2, 9);
+                l.notes.forEach(n => {
+                    if (!n.id) n.id = 'note_' + Math.random().toString(36).substr(2, 9);
+                });
+            });
+        } catch (e) {
+            resetToDefault();
+        }
+    } else {
+        resetToDefault();
+    }
 
     const panel = document.getElementById('control-panel');
-    if (appData.panelCollapsed) {
-        panel.classList.add('hidden');
-    } else {
-        panel.classList.remove('hidden');
+    if (panel) {
+        if (appData.panelCollapsed) {
+            panel.classList.add('hidden');
+        } else {
+            panel.classList.remove('hidden');
+        }
     }
 
     applyThemeEngine();
@@ -48,28 +69,11 @@ async function init() {
         renderAll();
     });
 
-    checkSavedSyncCredentials();
     renderAll();
 }
 
-async function loadFromPouch() {
-    try {
-        const doc = await localDB.get('app_state');
-        appData = doc;
-    } catch (err) {
-        if (err.status === 404) {
-            resetToDefault();
-            await localDB.put(appData);
-        } else {
-            console.error("Erreur de lecture PouchDB :", err);
-        }
-    }
-}
-
 function resetToDefault() {
-    const oldRev = appData._rev;
     appData = {
-        _id: 'app_state',
         lists: [
             { id: 'l1', name: 'À faire', collapsed: false, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()) }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()) }] },
             { id: 'l2', name: 'En cours', collapsed: false, notes: [] }
@@ -81,21 +85,10 @@ function resetToDefault() {
         lastExport: null,
         lastImport: null
     };
-    if (oldRev) appData._rev = oldRev;
 }
 
-async function saveToBrowser() {
-    try {
-        try {
-            const currentDoc = await localDB.get('app_state');
-            appData._rev = currentDoc._rev;
-        } catch (e) {
-            if (e.status !== 404) throw e;
-        }
-        await localDB.put(appData);
-    } catch (err) {
-        console.error("Échec de la sauvegarde locale dans PouchDB :", err);
-    }
+function saveToBrowser() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
 }
 
 function applyThemeEngine() {
@@ -105,91 +98,53 @@ function applyThemeEngine() {
     } else {
         document.body.classList.remove('dark-theme');
     }
-    btnTheme.innerHTML = appData.themeMode === 'auto' ? '🌓 Auto' : appData.themeMode === 'dark' ? '🌙 Sombre' : '☀️ Clair';
+    if (btnTheme) {
+        btnTheme.innerHTML = appData.themeMode === 'auto' ? '🌓 Auto' : appData.themeMode === 'dark' ? '🌙 Sombre' : '☀️ Clair';
+    }
 }
 
-window.toggleTheme = async () => {
+window.toggleTheme = () => {
     appData.themeMode = appData.themeMode === 'auto' ? 'light' : appData.themeMode === 'light' ? 'dark' : 'auto';
-    await saveToBrowser();
+    saveToBrowser();
     applyThemeEngine();
 };
 
-function checkSavedSyncCredentials() {
-    const saved = localStorage.getItem('pwa_cloudant_sync_creds');
-    if (saved) {
-        try {
-            const creds = JSON.parse(saved);
-            startSyncEngine(creds.host, creds.user, creds.pass);
-        } catch (e) {
-            localStorage.removeItem('pwa_cloudant_sync_creds');
-        }
-    }
-}
-
-window.setupCloudSync = () => {
-    const hostInput = document.getElementById('sync-url').value.trim();
-    const userInput = document.getElementById('sync-user').value.trim();
-    const passInput = document.getElementById('sync-pass').value.trim();
-    const remember = document.getElementById('sync-remember').checked;
-
-    if (!hostInput || !userInput || !passInput) {
-        alert("Veuillez remplir tous les champs de connexion distant.");
-        return;
-    }
-
-    const cleanHost = hostInput.replace('https://', '').replace('http://', '').split('/')[0];
-
-    if (remember) {
-        localStorage.setItem('pwa_cloudant_sync_creds', JSON.stringify({ host: cleanHost, user: userInput, pass: passInput }));
-    }
-
-    startSyncEngine(cleanHost, userInput, passInput);
+window.toggleAllLists = () => {
+    const anyExpanded = appData.lists.some(l => !l.collapsed);
+    appData.lists.forEach(l => l.collapsed = anyExpanded);
+    saveToBrowser();
+    renderAll();
 };
 
-function startSyncEngine(host, user, pass) {
-    if (syncHandler) syncHandler.cancel();
-
-    const dbName = "pwa_compact_lists"; 
-    const remoteURL = `https://${user}:${pass}@${host}/${dbName}`;
-
-    remoteDB = new PouchDB(remoteURL);
-
-    syncHandler = localDB.sync(remoteDB, {
-        live: true,
-        retry: true
-    }).on('change', async function (info) {
-        if (info.direction === 'pull') {
-            console.log('Synchronisation : Données distantes reçues, mise à jour UI...');
-            await loadFromPouch();
-            renderAll();
+function updateStorageMetric() {
+    if (!storageInfo) return;
+    
+    let totalChars = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            totalChars += localStorage[key].length + key.length;
         }
-    }).on('error', function (err) {
-        console.error('Erreur de réplication critique :', err);
-    });
-
-    document.getElementById('sync-form').classList.add('hidden');
-    document.getElementById('sync-status').classList.remove('hidden');
+    }
+    
+    const sizeKB = (totalChars / 1024).toFixed(1);
+    const maxKB = 5120; // 5 Mo standard théorique global
+    const ratio = ((sizeKB / maxKB) * 100).toFixed(1);
+    
+    storageInfo.innerHTML = `Stockage : <b>${sizeKB} Ko</b> / ${maxKB} Ko (${ratio}%)`;
 }
-
-window.disconnectCloudSync = () => {
-    if (syncHandler) syncHandler.cancel();
-    localStorage.removeItem('pwa_cloudant_sync_creds');
-    remoteDB = null;
-    syncHandler = null;
-
-    document.getElementById('sync-url').value = '';
-    document.getElementById('sync-user').value = '';
-    document.getElementById('sync-pass').value = '';
-    document.getElementById('sync-remember').checked = false;
-
-    document.getElementById('sync-form').classList.remove('hidden');
-    document.getElementById('sync-status').classList.add('hidden');
-    alert("Synchronisation déconnectée.");
-};
 
 function renderAll() {
     checkBackupReminder();
-    backupTimestamps.innerHTML = `Export : <b>${formatDate(appData.lastExport)}</b> | Import : <b>${formatDate(appData.lastImport)}</b>`;
+    if (backupTimestamps) {
+        backupTimestamps.innerHTML = `Export : <b>${formatDate(appData.lastExport)}</b> | Import : <b>${formatDate(appData.lastImport)}</b>`;
+    }
+    
+    updateStorageMetric();
+
+    if (btnToggleAll) {
+        const anyExpanded = appData.lists.some(l => !l.collapsed);
+        btnToggleAll.innerHTML = anyExpanded ? '↕️ Replier' : '↕️ Déplier';
+    }
 
     activeSortableInstances.forEach(instance => { if (instance && instance.destroy) instance.destroy(); });
     activeSortableInstances = [];
@@ -207,8 +162,8 @@ function renderAll() {
 
         listBlock.innerHTML = `
             <div class="list-header">
-                <div class="list-title-zone" onclick="enableInlineEdit(event, '${list.id}')">
-                    <span style="color: #adb5bd; font-size:10px; margin-right: 5px; cursor:move;">☰</span>
+                <div class="list-title-zone" ondblclick="enableInlineEdit(event, '${list.id}')">
+                    <span class="list-drag-handle" style="color: #adb5bd; font-size:14px; margin-right: 4px; padding: 4px 10px; cursor:move; user-select:none; -webkit-user-select:none;">☰</span>
                     <span class="list-title-text">${escapeHTML(list.name)} (${list.notes.length})</span>
                 </div>
                 <div>
@@ -218,14 +173,18 @@ function renderAll() {
             </div>
             <div class="list-content ${list.collapsed ? 'collapsed' : ''}">
                 <form onsubmit="addNote(event, '${list.id}')" class="input-group">
-                    <input type="text" placeholder="Ajouter... (! = urgent)" required autocomplete="off">
+                    <input type="text" placeholder="Ajouter... (! = urgent, ? = incertain)" required autocomplete="off">
                     <button type="submit">+</button>
                 </form>
                 <ul class="notes-dropzone" data-list-id="${list.id}">
                     ${filteredNotes.map((note) => {
                         const parsed = getNoteDisplay(note.text);
+                        let noteClass = '';
+                        if (parsed.isPriority) noteClass = 'priority-high';
+                        else if (parsed.isQuestion) noteClass = 'note-question';
+
                         return `
-                            <li class="note-item ${parsed.isPriority ? 'priority-high' : ''}" data-id="${note.id}">
+                            <li class="note-item ${noteClass}" data-id="${note.id}">
                                 <div class="note-main" ondblclick="enableNoteEdit(event, '${list.id}', '${note.id}')">
                                     <span class="note-text-span">${escapeHTML(parsed.cleanText)}</span>
                                     <span class="note-date">le ${note.createdStr || 'N/A'}</span>
@@ -259,8 +218,12 @@ function renderAll() {
                     ${filteredTrash.length === 0 ? '<li style="color:#adb5bd; text-align:center; padding:3px; font-size:12px;">Aucun élément</li>' : ''}
                     ${filteredTrash.map((note) => {
                         const parsed = getNoteDisplay(note.text);
+                        let noteClass = '';
+                        if (parsed.isPriority) noteClass = 'priority-high';
+                        else if (parsed.isQuestion) noteClass = 'note-question';
+
                         return `
-                            <li class="note-item trash-item ${parsed.isPriority ? 'priority-high' : ''}">
+                            <li class="note-item trash-item ${noteClass}">
                                 <div class="note-main">
                                     <span>${escapeHTML(parsed.cleanText)}</span>
                                     <span class="note-date">Créé: ${note.createdStr || '?'} | <span style="color:var(--danger)">Supprimé le: ${note.deletedStr || 'N/A'}</span> (De: ${escapeHTML(note.originListName || 'Inconnu')})</span>
@@ -283,12 +246,9 @@ function renderAll() {
 function initSortableEngine() {
     const s1 = Sortable.create(listsContainer, {
         animation: 120,
-        handle: '.list-header',
+        handle: '.list-drag-handle',
         ghostClass: 'ghost-list',
-        delay: 150,
-        delayOnTouchOnly: true,
-        touchStartThreshold: 5,
-        onEnd: async function () {
+        onEnd: function () {
             const newOrderedLists = [];
             document.querySelectorAll('#lists-container .list-block').forEach(block => {
                 const listId = block.dataset.id;
@@ -296,8 +256,8 @@ function initSortableEngine() {
                 if (foundList) newOrderedLists.push(foundList);
             });
             appData.lists = newOrderedLists;
-            await saveToBrowser();
-            syncDOMAttributes();
+            saveToBrowser();
+            setTimeout(renderAll, 0);
         }
     });
     activeSortableInstances.push(s1);
@@ -308,9 +268,9 @@ function initSortableEngine() {
             group: 'shared-notes-group',
             ghostClass: 'ghost-note',
             fallbackTolerance: 3,
-            delay: 100,
+            delay: 150,
             delayOnTouchOnly: true,
-            onEnd: async function (evt) {
+            onEnd: function (evt) {
                 const fromListId = evt.from.dataset.listId;
                 const toListId = evt.to.dataset.listId;
                 
@@ -319,35 +279,29 @@ function initSortableEngine() {
                 
                 if (!fromList || !toList) return;
 
+                const noteIdMoved = evt.item.dataset.id;
+
+                if (fromListId !== toListId) {
+                    const noteIndex = fromList.notes.findIndex(n => n.id === noteIdMoved);
+                    if (noteIndex !== -1) {
+                        const [movedNote] = fromList.notes.splice(noteIndex, 1);
+                        toList.notes.push(movedNote);
+                    }
+                }
+
                 const newNotesOrder = [];
                 evt.to.querySelectorAll('.note-item').forEach(li => {
-                    const noteId = li.dataset.id;
-                    const foundNote = fromList.notes.find(n => n.id === noteId) || toList.notes.find(n => n.id === noteId);
+                    const id = li.dataset.id;
+                    const foundNote = toList.notes.find(n => n.id === id);
                     if (foundNote) newNotesOrder.push(foundNote);
                 });
 
-                if (fromListId !== toListId) {
-                    const noteIdMoved = evt.item.dataset.id;
-                    fromList.notes = fromList.notes.filter(n => n.id !== noteIdMoved);
-                }
-
                 toList.notes = newNotesOrder;
-                await saveToBrowser();
-                syncDOMAttributes();
+                saveToBrowser();
+                setTimeout(renderAll, 0);
             }
         });
         activeSortableInstances.push(s2);
-    });
-}
-
-function syncDOMAttributes() {
-    document.querySelectorAll('.list-block').forEach((block) => {
-        const listId = block.dataset.id;
-        const listData = appData.lists.find(l => l.id === listId);
-        if (!listData) return;
-
-        const countSpan = block.querySelector('.list-title-text');
-        if (countSpan) countSpan.textContent = `${listData.name} (${listData.notes.length})`;
     });
 }
 
@@ -360,7 +314,7 @@ window.clearSearch = () => {
 };
 
 window.enableInlineEdit = (event, listId) => {
-    if (event.target.textContent === '☰') return;
+    if (event.target.classList.contains('list-drag-handle') || event.target.textContent === '☰') return;
     const titleZone = event.currentTarget;
     const textSpan = titleZone.querySelector('.list-title-text');
     if (titleZone.querySelector('input')) return;
@@ -378,11 +332,11 @@ window.enableInlineEdit = (event, listId) => {
     input.focus();
     input.select();
 
-    const saveRename = async () => {
+    const saveRename = () => {
         const newName = input.value.trim();
         if (newName && newName !== listData.name) {
             listData.name = newName;
-            await saveToBrowser();
+            saveToBrowser();
         }
         renderAll();
     };
@@ -414,11 +368,11 @@ window.enableNoteEdit = (event, listId, noteId) => {
     input.focus();
     input.select();
 
-    const saveNoteChange = async () => {
+    const saveNoteChange = () => {
         const newText = input.value.trim();
         if (newText && newText !== noteData.text) {
             noteData.text = newText;
-            await saveToBrowser();
+            saveToBrowser();
         }
         renderAll();
     };
@@ -427,17 +381,17 @@ window.enableNoteEdit = (event, listId, noteId) => {
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNoteChange(); if (e.key === 'Escape') renderAll(); });
 };
 
-formAddList.addEventListener('submit', async (e) => {
+formAddList.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = inputListName.value.trim();
     if (!name) return;
     appData.lists.push({ id: 'list_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), name: name, collapsed: false, notes: [] });
     inputListName.value = '';
-    await saveToBrowser();
+    saveToBrowser();
     renderAll();
 });
 
-window.addNote = async (e, listId) => {
+window.addNote = (e, listId) => {
     e.preventDefault();
     const input = e.target.querySelector('input[type="text"]');
     const text = input.value.trim();
@@ -445,33 +399,32 @@ window.addNote = async (e, listId) => {
 
     const listData = appData.lists.find(l => l.id === listId);
     if (listData) {
-        listData.notes.push({ 
+        // Logique v1.26.0 déplacée ici : un préfixe "!" insère directement en tête de liste
+        const parsed = getNoteDisplay(text);
+        const newNoteObj = { 
             id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
             text: text,
             createdStr: formatDate(new Date())
-        });
-        await saveToBrowser();
+        };
+
+        if (parsed.isPriority) {
+            listData.notes.unshift(newNoteObj);
+        } else {
+            listData.notes.push(newNoteObj);
+        }
+        saveToBrowser();
     }
     input.value = '';
     renderAll();
 };
 
-window.toggleList = async (listId) => {
+window.toggleList = (listId) => {
     const listData = appData.lists.find(l => l.id === listId);
-    if (listData) { listData.collapsed = !listData.collapsed; await saveToBrowser(); }
+    if (listData) { listData.collapsed = !listData.collapsed; saveToBrowser(); }
     renderAll();
 };
 
-window.toggleAllLists = async () => {
-    const auMoinsUneDeveloppee = appData.lists.some(list => !list.collapsed);
-    appData.lists.forEach(list => {
-        list.collapsed = auMoinsUneDeveloppee;
-    });
-    await saveToBrowser();
-    renderAll();
-};
-
-window.deleteList = async (listId) => {
+window.deleteList = (listId) => {
     const index = appData.lists.findIndex(l => l.id === listId);
     if (index !== -1) {
         const list = appData.lists[index];
@@ -483,13 +436,13 @@ window.deleteList = async (listId) => {
                 appData.trash.unshift(note);
             });
             appData.lists.splice(index, 1);
-            await saveToBrowser();
+            saveToBrowser();
             renderAll();
         }
     }
 };
 
-window.moveToTrash = async (listId, noteId) => {
+window.moveToTrash = (listId, noteId) => {
     const listData = appData.lists.find(l => l.id === listId);
     if (!listData) return;
     const noteIndex = listData.notes.findIndex(n => n.id === noteId);
@@ -499,12 +452,12 @@ window.moveToTrash = async (listId, noteId) => {
         note.originListName = listData.name;
         note.deletedStr = formatDate(new Date());
         appData.trash.unshift(note);
-        await saveToBrowser();
+        saveToBrowser();
     }
     renderAll();
 };
 
-window.restoreFromTrash = async (trashIndex) => {
+window.restoreFromTrash = (trashIndex) => {
     const note = appData.trash.splice(trashIndex, 1)[0];
     let targetList = appData.lists.find(l => l.id === note.originListId);
     if (!targetList && appData.lists.length > 0) targetList = appData.lists[0];
@@ -514,13 +467,13 @@ window.restoreFromTrash = async (trashIndex) => {
     } else {
         appData.trash.unshift(note);
     }
-    await saveToBrowser();
+    saveToBrowser();
     renderAll();
 };
 
-window.permanentDelete = async (trashIndex) => { appData.trash.splice(trashIndex, 1); await saveToBrowser(); renderAll(); };
-window.emptyTrash = async () => { if (confirm("Vider définitivement la corbeille ?")) { appData.trash = []; await saveToBrowser(); renderAll(); } };
-window.toggleTrash = async () => { appData.trashCollapsed = !appData.trashCollapsed; await saveToBrowser(); renderAll(); };
+window.permanentDelete = (trashIndex) => { appData.trash.splice(trashIndex, 1); saveToBrowser(); renderAll(); };
+window.emptyTrash = () => { if (confirm("Vider définitivement la corbeille ?")) { appData.trash = []; saveToBrowser(); renderAll(); } };
+window.toggleTrash = () => { appData.trashCollapsed = !appData.trashCollapsed; saveToBrowser(); renderAll(); };
 
 function checkBackupReminder() {
     alertContainer.innerHTML = '';
@@ -535,16 +488,11 @@ function checkBackupReminder() {
 
 window.triggerImport = () => { document.getElementById('import-file-input').click(); };
 
-// FONCTION EXPORT MODIFIÉE AVEC TIMESTAMP PERSONNALISÉ
+// Version v1.28.0 : Export asynchrone sécurisé avec l'API File System Access
 window.exportData = async () => {
     appData.lastExport = Date.now(); 
-    await saveToBrowser();
+    saveToBrowser();
     
-    const cleanData = { ...appData };
-    delete cleanData._id;
-    delete cleanData._rev;
-
-    // Construction de la date au format aaaammjj hhmmss
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -552,14 +500,43 @@ window.exportData = async () => {
     const hh = String(now.getHours()).padStart(2, '0');
     const min = String(now.getMinutes()).padStart(2, '0');
     const ss = String(now.getSeconds()).padStart(2, '0');
-    
-    const timestamp = `${yyyy}${mm}${dd} ${hh}${min}${ss}`;
+    const fileName = `backup_listes_${yyyy}${mm}${dd}_${hh}${min}${ss}.json`;
 
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(JSON.stringify(cleanData, null, 2));
+    const jsonString = JSON.stringify(appData, null, 2);
+
+    // 1. Tentative avec l'API moderne showSaveFilePicker
+    if ('showSaveFilePicker' in window) {
+        try {
+            const options = {
+                suggestedName: fileName,
+                types: [{
+                    description: 'Fichier de sauvegarde JSON',
+                    accept: { 'application/json': ['.json'] }
+                }]
+            };
+            const handle = await window.showSaveFilePicker(options);
+            const writable = await handle.createWritable();
+            await writable.write(jsonString);
+            await writable.close();
+            
+            renderAll();
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                renderAll();
+                return;
+            }
+            console.warn("showSaveFilePicker a échoué, repli sur la méthode classique.", err);
+        }
+    }
+
+    // 2. Fallback classique (au cas où le navigateur bloque l'API ou n'est pas compatible)
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(jsonString);
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', `backup_listes_${timestamp}.json`);
+    linkElement.setAttribute('download', fileName);
     linkElement.click();
+    
     renderAll();
 };
 
@@ -567,20 +544,14 @@ window.importData = (event) => {
     const fileReader = new FileReader();
     const file = event.target.files[0];
     if (!file) return;
-    fileReader.onload = async (e) => {
+    fileReader.onload = (e) => {
         try {
             const parsedData = JSON.parse(e.target.result);
             if (parsedData && Array.isArray(parsedData.lists)) {
-                const currentRev = appData._rev;
                 appData = parsedData;
-                appData._id = 'app_state';
-                if (currentRev) appData._rev = currentRev;
                 if (!appData.trash) appData.trash = [];
                 appData.lastImport = Date.now();
-                
-                await saveToBrowser(); 
-                applyThemeEngine(); 
-                renderAll();
+                saveToBrowser(); applyThemeEngine(); renderAll();
                 alert("Importation réussie !");
             }
         } catch (err) { alert("Erreur de fichier JSON."); }
@@ -588,21 +559,24 @@ window.importData = (event) => {
     fileReader.readAsText(file);
 };
 
-window.toggleControlPanel = async () => { 
-    const panel = document.getElementById('control-panel'); 
-    appData.panelCollapsed = panel.classList.toggle('hidden'); 
-    await saveToBrowser(); 
-};
-
-btnReset.addEventListener('click', async () => { 
-    if (confirm("Tout effacer ?")) { 
-        await localDB.destroy(); 
-        window.location.reload(); 
-    } 
-});
+window.toggleControlPanel = () => { const panel = document.getElementById('control-panel'); appData.panelCollapsed = panel.classList.toggle('hidden'); saveToBrowser(); };
+if (btnReset) {
+    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); init(); } });
+}
 
 function formatDate(dateObj) { if (!dateObj) return 'jamais'; const d = new Date(dateObj); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
-function getNoteDisplay(text) { const isPriority = text.startsWith('!'); return { isPriority, cleanText: isPriority ? text.substring(1).trim() : text }; }
+
+// Version v1.27.0 & v1.27.1 : Détection multi-préfixes (? et !)
+function getNoteDisplay(text) { 
+    const isPriority = text.startsWith('!'); 
+    const isQuestion = text.startsWith('?');
+    let cleanText = text;
+    if (isPriority || isQuestion) {
+        cleanText = text.substring(1).trim();
+    }
+    return { isPriority, isQuestion, cleanText }; 
+}
+
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
 init();
