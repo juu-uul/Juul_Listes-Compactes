@@ -1,6 +1,6 @@
 {
-  "name": "Listes Compactes Pro",
-  "short_name": "ListesPro",
+  "name": "Juul_Listes-Compactes",
+  "short_name": "JuulListes",
   "description": "Gestionnaire de listes compact et performant utilisable hors ligne.",
   "start_url": "./index.html",
   "display": "standalone",

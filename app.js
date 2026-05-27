@@ -399,7 +399,6 @@ window.addNote = (e, listId) => {
 
     const listData = appData.lists.find(l => l.id === listId);
     if (listData) {
-        // Logique v1.26.0 déplacée ici : un préfixe "!" insère directement en tête de liste
         const parsed = getNoteDisplay(text);
         const newNoteObj = { 
             id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
@@ -488,7 +487,6 @@ function checkBackupReminder() {
 
 window.triggerImport = () => { document.getElementById('import-file-input').click(); };
 
-// Version v1.28.0 : Export asynchrone sécurisé avec l'API File System Access
 window.exportData = async () => {
     appData.lastExport = Date.now(); 
     saveToBrowser();
@@ -504,7 +502,6 @@ window.exportData = async () => {
 
     const jsonString = JSON.stringify(appData, null, 2);
 
-    // 1. Tentative avec l'API moderne showSaveFilePicker
     if ('showSaveFilePicker' in window) {
         try {
             const options = {
@@ -530,7 +527,6 @@ window.exportData = async () => {
         }
     }
 
-    // 2. Fallback classique (au cas où le navigateur bloque l'API ou n'est pas compatible)
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(jsonString);
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -566,7 +562,6 @@ if (btnReset) {
 
 function formatDate(dateObj) { if (!dateObj) return 'jamais'; const d = new Date(dateObj); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
 
-// Version v1.27.0 & v1.27.1 : Détection multi-préfixes (? et !)
 function getNoteDisplay(text) { 
     const isPriority = text.startsWith('!'); 
     const isQuestion = text.startsWith('?');

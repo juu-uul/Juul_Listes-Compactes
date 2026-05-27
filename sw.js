@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compact-lists-v1.28.0';
+const CACHE_NAME = 'compact-lists-v1.29.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

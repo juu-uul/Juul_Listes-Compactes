@@ -1,20 +1,23 @@
 ========================================================================
-                      LISTES COMPACTES PRO
+                      JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v1.28.0
+Version : v1.29.0
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
+Note    : Cette application est fièrement co-développée avec l'aide 
+          d'une Intelligence Artificielle (IA).
 ========================================================================
 
 ------------------------------------------------------------------------
 1. PRÉSENTATION DE L'APPLICATION
 ------------------------------------------------------------------------
-Listes Compactes Pro est un gestionnaire de tâches et de listes épuré,
-conçu pour offrir une productivité maximale sans fioritures. L'interface 
-a été densifiée au maximum pour éliminer le défilement inutile et 
+Juul_Listes-Compactes est un gestionnaire de tâches et de listes épuré,
+conçu pour offrir une productivité maximale sans fioritures.
+L'interface a été densifiée au maximum pour éliminer le défilement inutile et 
 permettre une vision globale d'un seul coup d'œil.
 
 Caractéristiques principales :
+- Co-développement assisté par IA pour un code agile et optimisé.
 - Interface ultra-compacte et minimaliste.
 - Fonctionnement 100% hors ligne (grâce au Service Worker).
 - Installation native sur PC, Mac, Android et iOS (PWA).
@@ -29,7 +32,6 @@ Fiche Technique :
 - Librairie externe : SortableJS (via CDN).
 - Limite de stockage : ~5 Mo (5120 Ko) max via LocalStorage.
 
-
 ------------------------------------------------------------------------
 2. STRUCTURE DU PROJET (CONTENU DU DOSSIER)
 ------------------------------------------------------------------------
@@ -40,7 +42,6 @@ Le dossier de l'application doit impérativement contenir les fichiers suivants 
  ├── sw.js            -> Service Worker gérant le cache et le mode hors ligne
  ├── manifest.json    -> Fichier de configuration PWA (icônes, couleurs, nom)
  └── README.txt       -> Le présent fichier d'information et mode d'emploi
-
 
 ------------------------------------------------------------------------
 3. MODE D'EMPLOI & INSTALLATION
@@ -58,12 +59,12 @@ L'application ne nécessite aucun téléchargement sur un App Store.
 B. GESTION DES LISTES
 - Créer une liste : Ouvrez le menu "⚙️ Menu", saisissez le nom dans le champ 
   dédié et validez.
-- Replier / Déplier : Cliquez sur la flèche (▶ ou ▼) à côté du titre. Le bouton 
-  "↕️ Replier" en haut agit sur toutes les listes en même temps.
+- Replier / Déplier : Cliquez sur la flèche (▶ ou ▼) à côté du titre.
+  Le bouton "↕️ Replier" en haut agit sur toutes les listes en même temps.
 - Renommer : Double-cliquez sur le texte du titre d'une liste, modifiez-le, 
   puis appuyez sur Entrée ou cliquez à l'extérieur.
-- Supprimer : Cliquez sur la croix rouge (✕) à droite du titre. Les notes 
-  sont automatiquement envoyées dans l'historique.
+- Supprimer : Cliquez sur la croix rouge (✕) à droite du titre.
+  Les notes sont automatiquement envoyées dans l'historique.
 
 C. GESTION DES NOTES (TÂCHES)
 - Ajouter une note : Saisissez votre texte dans le champ "Ajouter..." de la 
@@ -87,14 +88,14 @@ D. GLISSER-DÉPOSER (SORTABLEJS)
 E. RECHERCHE ET FILTRAGE
 - Tapez un mot dans la barre de recherche supérieure pour filtrer instantanément 
   le contenu. Si un mot correspond au titre d'une liste, toute la liste reste 
-  visible. Cliquez sur le bouton "✕" de l'input pour vider la recherche.
+  visible.
+- Cliquez sur le bouton "✕" de l'input pour vider la recherche.
 
 F. HISTORIQUE & CORBEILLE
 Située en bas de page, la section "🗑️ Historique" liste les éléments supprimés.
 - Cliquez sur "Restaurer" pour renvoyer la tâche dans sa liste d'origine.
 - Cliquez sur la croix rouge (✕) pour une suppression définitive.
 - Cliquez sur "Vider" pour effacer tout l'historique d'un coup.
-
 
 ------------------------------------------------------------------------
 4. OPTIONS SYSTÈME & SÉCURITÉ
@@ -108,10 +109,12 @@ Accessibles depuis le panneau "⚙️ Menu" :
   restaurer vos données sur un autre appareil ou après un nettoyage.
 - Reset Global : Supprime définitivement toutes les données pour repartir à zéro.
 
-
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
 ------------------------------------------------------------------------
+v1.29.0 - Renommage officiel de l'application en "Juul_Listes-Compactes".
+          Documentation explicite du co-développement humain-IA.
+          Mise à jour des manifestes et du système de cache.
 v1.28.0 - Intégration de l'API File System Access (`showSaveFilePicker`) lors de l'export.
           Force l'apparition de l'explorateur système pour choisir le dossier d'enregistrement.
           Système de secours (fallback) conservé pour les navigateurs incompatibles.
