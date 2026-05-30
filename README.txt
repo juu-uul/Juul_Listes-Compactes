@@ -1,16 +1,18 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v2.0.0 (Mise à jour Cloud Majeure)
+Version : v2.2.0 (Sécurisation multi-appareils et pare-feu anti-conflits)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
-Note    : Cette application est fièrement co-développée avec l'aide 
-          d'une Intelligence Artificielle (IA).
-========================================================================
 
 ------------------------------------------------------------------------
-1. PRÉSENTATION DE L'APPLICATION
+⚠️ AVIS DE DÉVELOPPEMENT
+Ce projet et ses révisions de code associées (notamment le module anti-conflit
+de synchronisation v2.2) ont été co-développés et optimisés à l'aide d'une 
+Intelligence Artificielle (IA) agissant comme collaboratrice technique.
 ------------------------------------------------------------------------
+
+1. PRÉSENTATION DE L'APPLICATION
 Juul_Listes-Compactes est un gestionnaire de tâches et de listes épuré,
 conçu pour offrir une productivité maximale sans fioritures.
 L'interface a été densifiée au maximum pour éliminer le défilement inutile et 
@@ -24,7 +26,7 @@ Caractéristiques principales :
 - Organisation dynamique par Glisser-Déposer (SortableJS).
 - Système visuel d'urgence et de statut (Code couleur Rouge/Jaune).
 - Recherche et filtrage instantanés.
-- NOUVEAU V2.0.0 : Synchronisation cloud automatique via API Google Apps Script.
+- Synchronisation cloud automatique via API Google Apps Script.
 - Sécurité renforcée : Vos clés cloud restent locales, rien n'est exposé sur GitHub.
 - Gestion intelligente des conflits multi-appareils via doubles marqueurs temporels.
 - Sauvegarde locale d'urgence par fichier JSON conservée.
@@ -36,35 +38,36 @@ Fiche Technique :
 
 ------------------------------------------------------------------------
 2. STRUCTURE DU PROJET (CONTENU DU DOSSIER)
-------------------------------------------------------------------------
 Le dossier de l'application doit impérativement contenir les fichiers suivants :
 
- ├── index.html       -> Interface utilisateur, styles CSS compacts et panneau Cloud
+ ├── index.html       -> Interface utilisateur, styles CSS compacts, modale de conflit
  ├── app.js           -> Logique applicative, moteur de debounce (10s) et synchro API
- ├── sw.js            -> Service Worker gérant le cache v2.0.0 et le mode dégradé
+ ├── sw.js            -> Service Worker gérant le cache v2.2.0 et le mode dégradé
  ├── manifest.json    -> Fichier de configuration PWA (icônes, couleurs, nom)
  └── README.txt       -> Le présent fichier d'information et mode d'emploi
 
 ------------------------------------------------------------------------
-3. LE NOUVEAU SYSTÈME CLOUD (V2.0.0)
-------------------------------------------------------------------------
+3. LE SYSTÈME CLOUD & PROTOCOLE SÉCURITÉ SESSIONS (v2.2.0)
 Pour activer la synchronisation automatique :
-1. Ouvrez le volet "⚙️ Menu".
-2. Dans la section "☁️ Synchronisation Cloud", collez votre URL Google Apps Script.
-3. Saisissez votre clé secrète.
-4. L'application vérifie l'état et affiche un indicateur dans le footer.
+1. Ouvrez le volet "⚙️".
+2. Renseignez obligatoirement le champ "Nom unique de cet appareil" (Ex: iPhone Juul, Mac Pro...).
+   -> Les champs de clé/URL cloud restent verrouillés tant que l'appareil n'a pas de nom.
+3. Collez votre URL Google Apps Script et saisissez votre clé secrète.
+4. L'application vérifie l'état et met à jour la bulle flottante.
 
-Fonctionnement de l'automatisation :
-- Anti-Rebond (Debounce 10s) : Les données sont écrites immédiatement en local, 
-  mais l'envoi cloud attend 10 secondes d'inactivité complète pour préserver les quotas.
-- Sauvegarde à la fermeture : Si vous fermez l'onglet pendant le décompte des 10s, 
-  un système d'urgence transmet les données de manière synchrone via l'API Keepalive.
-- Résolution des conflits : Au démarrage, l'application compare les timestamps 
-  de modification locale et cloud. La version la plus récente l'emporte automatiquement.
+MOTEUR DE RÉSOLUTION DES CONFLITS :
+À chaque initialisation et rafraîchissement (ou au lancement manuel), l'application exécute
+un contrôle en arrière-plan. Si le dernier appareil ayant écrit sur le cloud est différent 
+de l'appareil actuel ET qu'un écart temporel de modification existe, une interface modale de 
+blocage s'ouvre. Ce tableau de comparaison affiche en temps réel :
+- Le nom des deux périphériques en concurrence.
+- L'horodatage précis des modifications respectives.
+- Le volume de données (nombre de listes présentes).
+L'utilisateur peut alors valider l'arbitrage en écrasant sa version locale (Bouton vert) 
+ou en forçant sa copie locale sur le serveur cloud (Bouton orange).
 
 ------------------------------------------------------------------------
 4. MODE D'EMPLOI CLASSIQUE
-------------------------------------------------------------------------
 
 A. INSTALLATION (PWA)
 - Sur Ordinateur : Cliquez sur l'icône d'installation dans la barre d'adresse.
@@ -72,7 +75,7 @@ A. INSTALLATION (PWA)
 - Sur iOS : Safari > "Partager" > "Sur l'écran d'accueil".
 
 B. GESTION DES LISTES
-- Créer une liste : Ouvrez "⚙️ Menu", saisissez le nom et validez.
+- Créer une liste : Ouvrez "⚙️", saisissez le nom et validez.
 - Replier / Déplier : Cliquez sur la flèche (▶ ou ▼) à côté du titre.
 - Renommer : Double-cliquez sur le texte du titre d'une liste, modifiez-le, puis Entrée.
 - Supprimer : Cliquez sur la croix rouge (✕) à droite du titre (historisé).
@@ -80,25 +83,24 @@ B. GESTION DES LISTES
 C. GESTION DES NOTES
 - Ajouter une note : Saisissez votre texte dans le champ "Ajouter...". La zone s'agrandit seule.
   * Sur Ordinateur : Entrée pour valider, Maj+Entrée pour un saut de ligne.
-  * Sur Mobile : Touche Entrée du clavier virtuel pour sauter une ligne, bouton "+" pour ajouter.
+  * Sur Mobile : Touche Entrée du clavier virtuel, bouton "+" large pour ajouter.
 - Code d'Urgence (!) : Commencez par '!' (ex: "!Urgent") pour colorer en rouge et épingler en haut.
 - Code d'Incertitude (?) : Commencez par '?' (ex: "?À vérifier") pour colorer en jaune en bas de liste.
-- Modifier : Double-cliquez sur la note (PC et Mobile) pour passer en édition instantanée.
+- Modifier : Double-cliquez sur la note pour passer en édition instantanée.
 - Supprimer : Cliquez sur la croix grise (✕) à droite pour envoyer à l'historique.
 
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
-------------------------------------------------------------------------
-v2.0.0 - Refonte majeure. Intégration de la synchronisation cloud automatique. 
-         Mise en place d'un debounce d'inactivité fixé à 10 secondes. 
-         Gestion des architectures multi-appareils (lastLocalChange et lastCloudSync). 
-         Création de l'interface de configuration sécurisée et masquée.
-v1.34.1 - Amélioration restauration : Les notes prioritaires ('!') sont réinsérées au sommet.
-v1.34.0 - Correctif flex-shrink pour empêcher le débordement des boutons de titre longs.
-v1.33.0 - Troncature dynamique CSS (text-overflow) sur les titres de listes volumineux.
-v1.32.0 - Hauteur dynamique automatique des textareas à la saisie et à la modification.
-v1.31.0 - Uniformisation tactile : Suppression du bouton crayon, édition par double-clic partout.
-v1.30.0 - Support complet des notes multilignes avec comportement d'Entrée différencié PC/Mobile.
-v1.29.0 - Renommage officiel de l'application en "Juul_Listes-Compactes" et mention IA.
-v1.28.0 - Intégration optionnelle de l'API File System Access (showSaveFilePicker) pour l'export.
+v2.2.0 - Ajout du nom d'appareil unique obligatoire pour la synchronisation. 
+         Implémentation du pare-feu anti-conflit au lancement avec interface de 
+         validation et tableau comparatif de granularité (timestamps, volume, sources).
+v2.0.6 - Ergonomie tactile : Doublement du padding horizontal des boutons d'en-tête (↕️ et ⚙️) 
+         pour simplifier le ciblage au doigt, et élargissement de l'écart à 8px au sein de la 
+         zone d'action des listes pour isoler le bouton de repli du bouton de suppression.
+v2.0.5 - Correction géométrique : Limitation de la course de la bulle de synchro aux frontières 
+         de l'application (650px) sur PC et ajout d'un padding d'évitement sur le footer pour 
+         empêcher tout chevauchement de texte sur mobile.
+v2.0.4 - Amélioration structurelle : Déplacement du bloc de statut Cloud et du bouton de synchro 
+         (🔄) dans une bulle flottante fixe en bas à droite de l'écran pour libérer de l'espace 
+         en haut et garantir une visibilité permanente de l'état du réseau.
 ========================================================================

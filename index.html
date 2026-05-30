@@ -70,11 +70,14 @@
             display: flex;
             gap: 4px;
             margin-bottom: 8px;
+            align-items: center;
+            flex-wrap: wrap;
         }
         .search-input-wrapper {
             position: relative;
             flex-grow: 1;
             display: flex;
+            min-width: 140px;
         }
         .search-input-wrapper input {
             width: 100%;
@@ -85,13 +88,16 @@
             color: var(--text);
         }
         .btn-action-header {
-            padding: 4px 6px;
+            padding: 4px 16px; 
             border: 1px solid var(--border);
             border-radius: 3px;
             background: var(--surface);
             color: var(--text);
-            font-size: 13px;
+            font-size: 14px;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .list-block {
@@ -134,7 +140,7 @@
         .list-actions-zone {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px; 
             flex-shrink: 0;
         }
         
@@ -217,7 +223,7 @@
             color: var(--text);
         }
         .input-group button {
-            padding: 4px 10px;
+            padding: 4px 20px; 
             border: 1px solid var(--border);
             border-left: none;
             border-radius: 0 3px 3px 0;
@@ -275,6 +281,7 @@
         .app-footer {
             margin-top: auto;
             padding-top: 10px;
+            padding-bottom: 48px; 
             border-top: 1px solid var(--border);
             text-align: center;
             font-size: 10px;
@@ -283,9 +290,43 @@
             flex-direction: column;
             gap: 3px;
         }
+        
+        .cloud-floating-bubble {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 5px 10px 5px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 12px var(--shadow);
+            z-index: 5000;
+        }
         .cloud-status-indicator {
             font-weight: bold;
             font-size: 11px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+        .btn-sync-floating {
+            background: none;
+            border: none;
+            font-size: 14px;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        @media (min-width: 650px) {
+            .cloud-floating-bubble {
+                right: calc(50% - 325px + 16px);
+            }
         }
 
         button { cursor: pointer; }
@@ -302,8 +343,8 @@
                 <input type="text" id="input-search" placeholder="🔍 Rechercher une note ou liste..." autocomplete="off">
                 <button id="btn-clear-search" onclick="clearSearch()" class="hidden" style="position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 8px; z-index: 5;">✕</button>
             </div>
-            <button id="btn-toggle-all" class="btn-action-header" onclick="toggleAllLists()">↕️ Replier</button>
-            <button class="btn-action-header" onclick="toggleControlPanel()">⚙️ Menu</button>
+            <button id="btn-toggle-all" class="btn-action-header" onclick="toggleAllLists()" title="Tout replier / déplier">↕️</button>
+            <button class="btn-action-header" onclick="toggleControlPanel()" title="Configuration & Paramètres">⚙️</button>
         </div>
 
         <div id="control-panel" class="control-panel-box hidden">
@@ -321,8 +362,17 @@
             
             <div class="cloud-config-box">
                 <label>☁️ Synchronisation Cloud</label>
-                <input type="text" id="input-cloud-url" placeholder="URL Web App Google Apps Script..." autocomplete="off">
-                <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
+                <div style="margin-top: 4px; margin-bottom: 4px;">
+                    <label for="input-cloud-device" style="font-weight: normal; margin-bottom: 2px; font-size: 11px; display: block;">Nom unique de cet appareil :</label>
+                    <input type="text" id="input-cloud-device" placeholder="Ex: iPhone Juul, PC Bureau..." autocomplete="off">
+                    <small id="device-status-msg" style="color: var(--danger); display: block; margin-bottom: 5px; font-size: 10px; font-weight: bold;">⚠️ Un nom d'appareil est obligatoire.</small>
+                </div>
+                <div id="cloud-fields-container" style="transition: opacity 0.2s;">
+                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">URL Web App Google Apps Script :</label>
+                    <input type="text" id="input-cloud-url" placeholder="URL Web App Google Apps Script..." autocomplete="off">
+                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Clé secrète de chiffrement :</label>
+                    <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
+                </div>
             </div>
         </div>
 
@@ -331,11 +381,62 @@
 
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
-            <div id="cloud-status" class="cloud-status-indicator">☁️ Cloud déconnecté</div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 2.0.0</div>
+            <div class="app-version">Version 2.2.0</div>
         </footer>
 
+    </div>
+
+    <div class="cloud-floating-bubble">
+        <div id="cloud-status" class="cloud-status-indicator">☁️ Cloud déconnecté</div>
+        <button id="btn-sync-cloud" class="btn-sync-floating" onclick="lancerSynchroManuel()" title="Synchroniser maintenant (Forcer)">🔄</button>
+    </div>
+
+    <div id="conflict-modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+        <div style="background: var(--surface); max-width: 500px; width: 100%; border-radius: 6px; padding: 20px; box-shadow: 0 10px 25px var(--shadow); border: 2px solid var(--primary); box-sizing: border-box; color: var(--text); font-size: 13px;">
+            <h3 style="color: var(--danger); margin-top: 0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 15px;">
+                ⚠️ Conflit de Synchronisation Multi-Appareils
+            </h3>
+            <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 12px; line-height: 1.4;">
+                Les données présentes sur le Cloud proviennent d'un autre appareil. Veuillez choisir la version à conserver pour éviter toute perte accidentelle.
+            </p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 6px 4px; font-weight: bold;">Critères</th>
+                        <th style="padding: 6px 4px; color: var(--text-muted);">Version Locale (Cet appareil)</th>
+                        <th style="padding: 6px 4px; color: var(--primary);">Version Cloud</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 6px 4px; font-weight: bold;">Appareil</td>
+                        <td id="conflict-local-device" style="padding: 6px 4px;">-</td>
+                        <td id="conflict-cloud-device" style="padding: 6px 4px; font-weight: bold;">-</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 6px 4px; font-weight: bold;">Date modif.</td>
+                        <td id="conflict-local-date" style="padding: 6px 4px;">-</td>
+                        <td id="conflict-cloud-date" style="padding: 6px 4px;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 4px; font-weight: bold;">Volume</td>
+                        <td id="conflict-local-volume" style="padding: 6px 4px;">-</td>
+                        <td id="conflict-cloud-volume" style="padding: 6px 4px;">-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="btn-resolve-accept-cloud" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🟢 Télécharger la version Cloud (Écrase cet appareil)
+                </button>
+                <button id="btn-resolve-force-local" style="background: none; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🟠 Écraser le Cloud avec ma version Locale
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>

@@ -22,6 +22,7 @@ const btnToggleAll = document.getElementById('btn-toggle-all');
 const STORAGE_KEY = 'ma_pwa_compact_lists_data';
 const STORAGE_CLOUD_URL_KEY = 'juul_lists_cloud_url';
 const STORAGE_CLOUD_SECRET_KEY = 'juul_lists_cloud_secret';
+const STORAGE_DEVICE_NAME_KEY = 'juul_lists_device_name';
 
 let appData = { 
     lists: [], 
@@ -32,12 +33,14 @@ let appData = {
     lastExport: null, 
     lastImport: null,
     lastLocalChange: null,
-    lastCloudSync: null
+    lastCloudSync: null,
+    lastDevice: null
 };
 
 let searchQuery = '';
 let activeSortableInstances = [];
 let cloudSyncTimer = null;
+let currentCloudPayload = null;
 
 function init() {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -51,6 +54,7 @@ function init() {
             if (appData.themeMode === undefined) appData.themeMode = 'auto';
             if (appData.lastLocalChange === undefined) appData.lastLocalChange = null;
             if (appData.lastCloudSync === undefined) appData.lastCloudSync = null;
+            if (appData.lastDevice === undefined) appData.lastDevice = null;
             
             appData.lists.forEach(l => {
                 if (!l.id) l.id = 'list_' + Math.random().toString(36).substr(2, 9);
@@ -102,8 +106,9 @@ function resetToDefault() {
         themeMode: 'auto',
         lastExport: null,
         lastImport: null,
-        lastLocalChange: Date.now(),
-        lastCloudSync: null
+        lastLocalChange: 0,
+        lastCloudSync: null,
+        lastDevice: null
     };
 }
 
@@ -169,11 +174,6 @@ function renderAll() {
     }
     
     updateStorageMetric();
-
-    if (btnToggleAll) {
-        const anyExpanded = appData.lists.some(l => !l.collapsed);
-        btnToggleAll.innerHTML = anyExpanded ? '↕️ Replier' : '↕️ Déplier';
-    }
 
     activeSortableInstances.forEach(instance => { if (instance && instance.destroy) instance.destroy(); });
     activeSortableInstances = [];
@@ -628,7 +628,7 @@ window.importData = (event) => {
 
 window.toggleControlPanel = () => { const panel = document.getElementById('control-panel'); appData.panelCollapsed = panel.classList.toggle('hidden'); saveToBrowser(); };
 if (btnReset) {
-    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); init(); } });
+    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); localStorage.removeItem(STORAGE_DEVICE_NAME_KEY); init(); } });
 }
 
 function formatDate(dateObj) { if (!dateObj) return 'jamais'; const d = new Date(dateObj); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
@@ -646,7 +646,7 @@ function getNoteDisplay(text) {
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
 // ========================================================================
-// MOTEUR DE SYNCHRONISATION CLOUD INTÉGRÉ (V2.0.0)
+// MOTEUR DE SYNCHRONISATION CLOUD ET DE CONFLITS MULTI-APPAREILS (V2.2.0)
 // ========================================================================
 
 function updateCloudStatus(msg) {
@@ -657,6 +657,36 @@ function updateCloudStatus(msg) {
 function setupCloudEngine() {
     const urlInput = document.getElementById('input-cloud-url');
     const secretInput = document.getElementById('input-cloud-secret');
+    const deviceInput = document.getElementById('input-cloud-device');
+    const cloudFieldsContainer = document.getElementById('cloud-fields-container');
+    const deviceStatusMsg = document.getElementById('device-status-msg');
+
+    if (deviceInput) {
+        deviceInput.value = localStorage.getItem(STORAGE_DEVICE_NAME_KEY) || '';
+        
+        const handleDeviceToggle = (val) => {
+            if (val.trim().length > 0) {
+                cloudFieldsContainer.style.opacity = '1';
+                cloudFieldsContainer.style.pointerEvents = 'auto';
+                deviceStatusMsg.style.color = 'var(--text-muted)';
+                deviceStatusMsg.textContent = '✅ Appareil identifié avec succès.';
+            } else {
+                cloudFieldsContainer.style.opacity = '0.4';
+                cloudFieldsContainer.style.pointerEvents = 'none';
+                deviceStatusMsg.style.color = 'var(--danger)';
+                deviceStatusMsg.textContent = '⚠️ Un nom d\'appareil est obligatoire pour activer la synchronisation.';
+            }
+        };
+
+        handleDeviceToggle(deviceInput.value);
+
+        deviceInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            localStorage.setItem(STORAGE_DEVICE_NAME_KEY, val);
+            handleDeviceToggle(val);
+            initialiserSynchroCloud();
+        });
+    }
 
     if (urlInput && secretInput) {
         urlInput.value = localStorage.getItem(STORAGE_CLOUD_URL_KEY) || '';
@@ -671,12 +701,26 @@ function setupCloudEngine() {
             initialiserSynchroCloud();
         });
     }
+
+    const btnAcceptCloud = document.getElementById('btn-resolve-accept-cloud');
+    const btnForceLocal = document.getElementById('btn-resolve-force-local');
+    if (btnAcceptCloud && btnForceLocal) {
+        btnAcceptCloud.onclick = resoudreConflitViaCloud;
+        btnForceLocal.onclick = resoudreConflitViaLocal;
+    }
+
     initialiserSynchroCloud();
 }
 
 async function initialiserSynchroCloud() {
     const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
     const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
+    const localDevice = localStorage.getItem(STORAGE_DEVICE_NAME_KEY);
+
+    if (!localDevice || localDevice.trim() === '') {
+        updateCloudStatus("⚠️ Config incomplète (Nom requis)");
+        return;
+    }
     if (!url || !secret) {
         updateCloudStatus("☁️ Cloud déconnecté");
         return;
@@ -692,21 +736,35 @@ async function initialiserSynchroCloud() {
         
         if (res.success) {
             const cloudData = res.data;
+            
+            if (!cloudData) {
+                updateCloudStatus("⏳ Premier envoi au cloud...");
+                await executerSyncCloudDirecte();
+                return;
+            }
+
             const cloudChange = cloudData.lastLocalChange || 0;
             const localChange = appData.lastLocalChange || 0;
+            const lastCloudDevice = cloudData.lastDevice || 'Appareil Inconnu';
 
-            if (cloudChange > localChange) {
-                appData = cloudData;
-                appData.lastCloudSync = Date.now();
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-                applyThemeEngine();
-                renderAll();
-                updateCloudStatus("☁️ Synchronisé (Cloud importé)");
-            } else if (localChange > cloudChange) {
-                updateCloudStatus("⏳ Envoi des modifications locales...");
-                await executerSyncCloudDirecte();
+            // INTERCEPTION DE SÉCURITÉ CONTRE LES CONFLITS MULTI-APPAREILS
+            if (lastCloudDevice !== localDevice && cloudChange !== localChange) {
+                ouvrirModaleConflit(localDevice, localChange, lastCloudDevice, cloudChange, cloudData);
+                updateCloudStatus("⚠️ Conflit multi-appareils détecté");
             } else {
-                updateCloudStatus("☁️ À jour");
+                if (cloudChange > localChange) {
+                    appData = cloudData;
+                    appData.lastCloudSync = Date.now();
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                    applyThemeEngine();
+                    renderAll();
+                    updateCloudStatus("☁️ Synchronisé (Cloud importé)");
+                } else if (localChange > cloudChange) {
+                    updateCloudStatus("⏳ Envoi des modifications locales...");
+                    await executerSyncCloudDirecte();
+                } else {
+                    updateCloudStatus("☁️ À jour");
+                }
             }
         } else {
             updateCloudStatus(`❌ Erreur Auth : ${res.error}`);
@@ -719,7 +777,8 @@ async function initialiserSynchroCloud() {
 function planifierSyncCloud() {
     const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
     const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
-    if (!url || !secret) return;
+    const localDevice = localStorage.getItem(STORAGE_DEVICE_NAME_KEY);
+    if (!url || !secret || !localDevice || localDevice.trim() === '') return;
 
     updateCloudStatus("⏳ En attente d'inactivité (10s)...");
     clearTimeout(cloudSyncTimer);
@@ -729,9 +788,16 @@ function planifierSyncCloud() {
 async function executerSyncCloudDirecte() {
     const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
     const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
+    const localDevice = localStorage.getItem(STORAGE_DEVICE_NAME_KEY);
+    
+    if (!localDevice || localDevice.trim() === '') return;
     if (!url || !secret) return;
 
     updateCloudStatus("⏳ Sauvegarde cloud...");
+    
+    // Ajout de la signature d'appareil unique avant l'envoi
+    appData.lastDevice = localDevice;
+
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -750,11 +816,53 @@ async function executerSyncCloudDirecte() {
     }
 }
 
+function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudData) {
+    currentCloudPayload = cloudData;
+
+    const localCount = appData.lists ? appData.lists.length : 0;
+    const cloudCount = cloudData.lists ? cloudData.lists.length : 0;
+
+    document.getElementById('conflict-local-device').textContent = localDevice;
+    document.getElementById('conflict-cloud-device').textContent = cloudDevice;
+    
+    document.getElementById('conflict-local-date').textContent = formatDate(localTs);
+    document.getElementById('conflict-cloud-date').textContent = formatDate(cloudTs);
+    
+    document.getElementById('conflict-local-volume').textContent = `${localCount} liste(s)`;
+    document.getElementById('conflict-cloud-volume').textContent = `${cloudCount} liste(s)`;
+
+    document.getElementById('conflict-modal').style.display = 'flex';
+}
+
+function fermerModaleConflit() {
+    document.getElementById('conflict-modal').style.display = 'none';
+    currentCloudPayload = null;
+}
+
+function resoudreConflitViaCloud() {
+    if (!currentCloudPayload) return;
+    appData = currentCloudPayload;
+    appData.lastCloudSync = Date.now();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    applyThemeEngine();
+    renderAll();
+    updateCloudStatus("☁️ À jour (Cloud conservé)");
+    fermerModaleConflit();
+}
+
+async function resoudreConflitViaLocal() {
+    fermerModaleConflit();
+    updateCloudStatus("⏳ Forçage de la version locale...");
+    await executerSyncCloudDirecte();
+}
+
 window.addEventListener('beforeunload', () => {
     if (cloudSyncTimer) {
         const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
         const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
-        if (url && secret) {
+        const localDevice = localStorage.getItem(STORAGE_DEVICE_NAME_KEY);
+        if (url && secret && localDevice && localDevice.trim() !== '') {
+            appData.lastDevice = localDevice;
             fetch(url, {
                 method: 'POST',
                 keepalive: true,
@@ -763,5 +871,7 @@ window.addEventListener('beforeunload', () => {
         }
     }
 });
+
+window.lancerSynchroManuel = initialiserSynchroCloud;
 
 init();
