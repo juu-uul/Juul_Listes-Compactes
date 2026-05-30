@@ -128,7 +128,7 @@
             align-items: center;
             background: var(--app-bg);
             border: 1px solid var(--border);
-            padding: 3px 6px; 
+            padding: 4px 6px; 
             margin-bottom: 3px; 
             border-radius: 3px;
             color: var(--text);
@@ -151,6 +151,13 @@
             flex-direction: column;
             flex-grow: 1;
         }
+        
+        /* Permet la prise en compte des sauts de ligne */
+        .note-text-span, .note-main span {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
         .note-date {
             font-size: 9px; 
             color: var(--text-muted);
@@ -160,7 +167,24 @@
         .input-group {
             display: flex;
             margin-bottom: 4px; 
+            align-items: stretch;
         }
+        
+        /* Style spécifique pour le champ de saisie multiligne */
+        .input-group textarea {
+            flex-grow: 1;
+            padding: 5px 6px; 
+            border: 1px solid var(--border);
+            border-radius: 3px 0 0 3px;
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            resize: none;
+            box-sizing: border-box;
+            height: auto;
+        }
+        
         .input-group input {
             flex-grow: 1;
             padding: 4px 6px; 
@@ -170,7 +194,7 @@
             color: var(--text);
         }
         .input-group button {
-            padding: 4px 8px;
+            padding: 4px 10px;
             border: 1px solid var(--border);
             border-left: none;
             border-radius: 0 3px 3px 0;
@@ -254,7 +278,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 1.29.0</div>
+            <div class="app-version">Version 1.30.0</div>
         </footer>
 
     </div>

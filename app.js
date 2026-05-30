@@ -133,6 +133,14 @@ function updateStorageMetric() {
     storageInfo.innerHTML = `Stockage : <b>${sizeKB} Ko</b> / ${maxKB} Ko (${ratio}%)`;
 }
 
+window.handleNoteSubmitKey = (e) => {
+    // Sur desktop (écran > 768px), Entrée sans Maj valide le formulaire directement
+    if (e.key === 'Enter' && !e.shiftKey && !window.matchMedia('(max-width: 768px)').matches) {
+        e.preventDefault();
+        e.target.form.requestSubmit();
+    }
+};
+
 function renderAll() {
     checkBackupReminder();
     if (backupTimestamps) {
@@ -173,7 +181,7 @@ function renderAll() {
             </div>
             <div class="list-content ${list.collapsed ? 'collapsed' : ''}">
                 <form onsubmit="addNote(event, '${list.id}')" class="input-group">
-                    <input type="text" placeholder="Ajouter... (! = urgent, ? = incertain)" required autocomplete="off">
+                    <textarea placeholder="Ajouter... (! = urgent, ? = incertain)" required autocomplete="off" rows="1" onkeydown="handleNoteSubmitKey(event)"></textarea>
                     <button type="submit">+</button>
                 </form>
                 <ul class="notes-dropzone" data-list-id="${list.id}">
@@ -189,7 +197,10 @@ function renderAll() {
                                     <span class="note-text-span">${escapeHTML(parsed.cleanText)}</span>
                                     <span class="note-date">le ${note.createdStr || 'N/A'}</span>
                                 </div>
-                                <button class="delete-btn" style="background:none; border:none; color:inherit; opacity:0.5; cursor:pointer;" onclick="moveToTrash('${list.id}', '${note.id}')">✕</button>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button class="edit-btn" style="background:none; border:none; color:inherit; opacity:0.4; cursor:pointer; padding:0 2px; font-size:12px;" onclick="enableNoteEdit(event, '${list.id}', '${note.id}')" title="Modifier">✏️</button>
+                                    <button class="delete-btn" style="background:none; border:none; color:inherit; opacity:0.5; cursor:pointer; padding:0 2px;" onclick="moveToTrash('${list.id}', '${note.id}')" title="Supprimer">✕</button>
+                                </div>
                             </li>
                         `;
                     }).join('')}
@@ -346,8 +357,13 @@ window.enableInlineEdit = (event, listId) => {
 };
 
 window.enableNoteEdit = (event, listId, noteId) => {
-    const mainZone = event.currentTarget;
-    if (mainZone.querySelector('input')) return;
+    let mainZone = event.currentTarget;
+    // Si l'édition est déclenchée par le bouton crayon ✏️ plutôt que par dblclick
+    if (!mainZone.classList.contains('note-main')) {
+        const noteItem = mainZone.closest('.note-item');
+        mainZone = noteItem.querySelector('.note-main');
+    }
+    if (mainZone.querySelector('textarea')) return;
 
     const listData = appData.lists.find(l => l.id === listId);
     if (!listData) return;
@@ -357,19 +373,31 @@ window.enableNoteEdit = (event, listId, noteId) => {
     const textSpan = mainZone.querySelector('.note-text-span');
     const dateSpan = mainZone.querySelector('.note-date');
 
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.style.padding = "2px 4px";
-    input.value = noteData.text;
+    const textarea = document.createElement('textarea');
+    textarea.value = noteData.text;
+    textarea.rows = noteData.text.split('\n').length || 2;
+    textarea.style.fontFamily = "inherit";
+    textarea.style.fontSize = "inherit";
+    textarea.style.width = "100%";
+    textarea.style.boxSizing = "border-box";
+    textarea.style.padding = "2px 4px";
+    textarea.style.background = "var(--surface)";
+    textarea.style.color = "var(--text)";
+    textarea.style.border = "1px solid var(--border)";
+    textarea.style.borderRadius = "3px";
+    textarea.style.resize = "vertical";
 
     textSpan.style.display = 'none';
     dateSpan.style.display = 'none';
-    mainZone.insertBefore(input, dateSpan);
-    input.focus();
-    input.select();
+    mainZone.insertBefore(textarea, dateSpan);
+    textarea.focus();
+    textarea.select();
 
+    let isSaved = false;
     const saveNoteChange = () => {
-        const newText = input.value.trim();
+        if (isSaved) return;
+        isSaved = true;
+        const newText = textarea.value.trim();
         if (newText && newText !== noteData.text) {
             noteData.text = newText;
             saveToBrowser();
@@ -377,8 +405,18 @@ window.enableNoteEdit = (event, listId, noteId) => {
         renderAll();
     };
 
-    input.addEventListener('blur', saveNoteChange);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNoteChange(); if (e.key === 'Escape') renderAll(); });
+    textarea.addEventListener('blur', saveNoteChange);
+    textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            textarea.removeEventListener('blur', saveNoteChange);
+            renderAll();
+        }
+        // Sur bureau, Entrée sans Maj valide les modifications
+        if (e.key === 'Enter' && !e.shiftKey && !window.matchMedia('(max-width: 768px)').matches) {
+            e.preventDefault();
+            saveNoteChange();
+        }
+    });
 };
 
 formAddList.addEventListener('submit', (e) => {
@@ -393,7 +431,7 @@ formAddList.addEventListener('submit', (e) => {
 
 window.addNote = (e, listId) => {
     e.preventDefault();
-    const input = e.target.querySelector('input[type="text"]');
+    const input = e.target.querySelector('textarea');
     const text = input.value.trim();
     if (!text) return;
 

@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v1.29.0
+Version : v1.30.0
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 Note    : Cette application est fièrement co-développée avec l'aide 
@@ -15,7 +15,6 @@ Juul_Listes-Compactes est un gestionnaire de tâches et de listes épuré,
 conçu pour offrir une productivité maximale sans fioritures.
 L'interface a été densifiée au maximum pour éliminer le défilement inutile et 
 permettre une vision globale d'un seul coup d'œil.
-
 Caractéristiques principales :
 - Co-développement assisté par IA pour un code agile et optimisé.
 - Interface ultra-compacte et minimaliste.
@@ -26,12 +25,10 @@ Caractéristiques principales :
 - Recherche et filtrage instantanés.
 - Confidentialité totale : stockage local (LocalStorage), aucun compte requis.
 - Indicateur de stockage en temps réel intégré au footer.
-
 Fiche Technique :
 - Technologies : HTML5, CSS3 (Variables), JavaScript natif (ES6).
 - Librairie externe : SortableJS (via CDN).
 - Limite de stockage : ~5 Mo (5120 Ko) max via LocalStorage.
-
 ------------------------------------------------------------------------
 2. STRUCTURE DU PROJET (CONTENU DU DOSSIER)
 ------------------------------------------------------------------------
@@ -60,22 +57,27 @@ B. GESTION DES LISTES
 - Créer une liste : Ouvrez le menu "⚙️ Menu", saisissez le nom dans le champ 
   dédié et validez.
 - Replier / Déplier : Cliquez sur la flèche (▶ ou ▼) à côté du titre.
-  Le bouton "↕️ Replier" en haut agit sur toutes les listes en même temps.
+Le bouton "↕️ Replier" en haut agit sur toutes les listes en même temps.
 - Renommer : Double-cliquez sur le texte du titre d'une liste, modifiez-le, 
   puis appuyez sur Entrée ou cliquez à l'extérieur.
 - Supprimer : Cliquez sur la croix rouge (✕) à droite du titre.
   Les notes sont automatiquement envoyées dans l'historique.
 
-C. GESTION DES NOTES (TÂCHES)
+C. GESTION DES NOTES (TÂCHES MULTILIGNES)
 - Ajouter une note : Saisissez votre texte dans le champ "Ajouter..." de la 
-  liste concernée et validez (+ ou Entrée).
+  liste concernée et validez. 
+  * Sur Ordinateur : Appuyez sur Entrée pour valider directement. Utilisez Maj+Entrée 
+    pour faire un saut de ligne.
+  * Sur Mobile : Utilisez la touche Entrée classique de votre clavier tactile pour faire
+    un ou plusieurs sauts de ligne, puis appuyez sur le bouton "+" pour ajouter.
 - Hack de Priorité (Urgent) : Si votre texte commence par un point d'exclamation
   (ex: "!Rapport annuel"), la tâche se colore en rouge vif et se place 
   automatiquement au tout début (en haut) de sa liste.
 - Hack d'Incertitude / Question (À vérifier) : Si votre texte commence par un 
   point d'interrogation (ex: "?Vérifier les chiffres"), la tâche se colore en 
   jaune et s'ajoute normalement en bas de sa liste.
-- Modifier : Double-cliquez sur le texte de la note pour passer en mode édition.
+- Modifier : Cliquez sur l'icône crayon (✏️) à côté de la note (idéal sur mobile)
+  ou double-cliquez sur le texte de la note (sur ordinateur) pour passer en mode édition.
 - Supprimer : Cliquez sur la croix grise (✕) à droite de la note pour l'envoyer 
   à la corbeille.
 
@@ -112,6 +114,10 @@ Accessibles depuis le panneau "⚙️ Menu" :
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
 ------------------------------------------------------------------------
+v1.30.0 - Prise en charge complète des notes multilignes (sauts de ligne préservés).
+          Changement des champs d'entrée en textareas dynamiques.
+          Ajout d'un bouton d'édition (✏️) optimisé pour l'usage tactile sur mobile.
+          Gestion différenciée de la touche Entrée (Validation sur PC, Saut de ligne sur mobile).
 v1.29.0 - Renommage officiel de l'application en "Juul_Listes-Compactes".
           Documentation explicite du co-développement humain-IA.
           Mise à jour des manifestes et du système de cache.
