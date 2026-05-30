@@ -8,37 +8,37 @@
     <meta name="theme-color" content="#1e1e2e">
     <style>
         :root {
-            --bg: #eaecef;                 /* Fond d'écran global en version ordinateur */
-            --app-bg: #f8f9fa;             /* Fond de l'application */
-            --surface: #ffffff;            /* Fond des blocs de liste et d'inputs */
-            --text: #212529;               /* Couleur principale du texte */
-            --text-muted: #6c757d;         /* Pour les éléments secondaires (ex: les dates) */
+            --bg: #eaecef;
+            --app-bg: #f8f9fa;
+            --surface: #ffffff;
+            --text: #212529;
+            --text-muted: #6c757d;
             --border: #dee2e6;
             --primary: #0d6efd;
             --danger: #dc3545;
-            --priority-bg: #fde8e8;        /* Rouge très clair pour le fond (mode clair) */
-            --priority-border: #f8b4b4;    /* Bordure rouge douce */
-            --priority-text: #9b1c1c;      /* Texte rouge foncé */
-            --question-bg: #fef3c7;        /* Jaune clair pour les questions (mode clair) */
-            --question-border: #fde68a;    /* Bordure jaune douce */
-            --question-text: #92400e;      /* Texte jaune/ambre foncé */
+            --priority-bg: #fde8e8;
+            --priority-border: #f8b4b4;
+            --priority-text: #9b1c1c;
+            --question-bg: #fef3c7;
+            --question-border: #fde68a;
+            --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
         }
         .dark-theme {
-            --bg: #121212;                 /* Fond d'écran extérieur sombre */
-            --app-bg: #1a1a1a;             /* Fond de l'application sur PC */
-            --surface: #242424;            /* Fond des listes pour créer du relief */
-            --text: #f5f5f5;               /* Blanc cassé à fort contraste */
-            --text-muted: #b0b0b0;         /* Gris clair parfaitement lisible sur fond noir */
+            --bg: #121212;
+            --app-bg: #1a1a1a;
+            --surface: #242424;
+            --text: #f5f5f5;
+            --text-muted: #b0b0b0;
             --border: #3d3d3d;
-            --primary: #3b82f6;            /* Bleu plus électrique adapté au mode sombre */
+            --primary: #3b82f6;
             --danger: #f87171;
-            --priority-bg: #3b1414;        /* Rouge brique très sombre pour le fond */
-            --priority-border: #7f1d1d;    /* Bordure rouge foncé */
-            --priority-text: #fca5a5;      /* Rouge pastel clair offrant un excellent contraste */
-            --question-bg: #221c11;        /* Ambre/Marron très sombre et discret */
-            --question-border: #3d301a;    /* Bordure ambre atténuée */
-            --question-text: #cca43b;      /* Jaune or/moutarde mat, beaucoup moins agressif visuellement */
+            --priority-bg: #3b1414;
+            --priority-border: #7f1d1d;
+            --priority-text: #fca5a5;
+            --question-bg: #221c11;
+            --question-border: #3d301a;
+            --question-text: #cca43b;
             --shadow: rgba(0, 0, 0, 0.4);
         }
         
@@ -114,7 +114,30 @@
             display: flex;
             align-items: center;
             flex-grow: 1;
+            min-width: 0;
+            padding-right: 8px;
         }
+        .list-title-text {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .list-name-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .list-count {
+            white-space: nowrap;
+        }
+        .list-actions-zone {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        
         .notes-dropzone {
             list-style: none;
             padding: 0;
@@ -150,9 +173,9 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
+            cursor: pointer;
         }
         
-        /* Permet la prise en compte des sauts de ligne */
         .note-text-span, .note-main span {
             white-space: pre-wrap;
             word-break: break-word;
@@ -170,7 +193,6 @@
             align-items: stretch;
         }
         
-        /* Style spécifique pour le champ de saisie multiligne */
         .input-group textarea {
             flex-grow: 1;
             padding: 5px 6px; 
@@ -181,6 +203,7 @@
             font-family: inherit;
             font-size: 13px;
             resize: none;
+            overflow-y: hidden;
             box-sizing: border-box;
             height: auto;
         }
@@ -278,7 +301,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 1.30.0</div>
+            <div class="app-version">Version 1.34.1</div>
         </footer>
 
     </div>

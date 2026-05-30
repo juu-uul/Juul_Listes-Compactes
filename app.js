@@ -127,14 +127,13 @@ function updateStorageMetric() {
     }
     
     const sizeKB = (totalChars / 1024).toFixed(1);
-    const maxKB = 5120; // 5 Mo standard théorique global
+    const maxKB = 5120;
     const ratio = ((sizeKB / maxKB) * 100).toFixed(1);
     
     storageInfo.innerHTML = `Stockage : <b>${sizeKB} Ko</b> / ${maxKB} Ko (${ratio}%)`;
 }
 
 window.handleNoteSubmitKey = (e) => {
-    // Sur desktop (écran > 768px), Entrée sans Maj valide le formulaire directement
     if (e.key === 'Enter' && !e.shiftKey && !window.matchMedia('(max-width: 768px)').matches) {
         e.preventDefault();
         e.target.form.requestSubmit();
@@ -172,16 +171,19 @@ function renderAll() {
             <div class="list-header">
                 <div class="list-title-zone" ondblclick="enableInlineEdit(event, '${list.id}')">
                     <span class="list-drag-handle" style="color: #adb5bd; font-size:14px; margin-right: 4px; padding: 4px 10px; cursor:move; user-select:none; -webkit-user-select:none;">☰</span>
-                    <span class="list-title-text">${escapeHTML(list.name)} (${list.notes.length})</span>
+                    <div class="list-title-text">
+                        <span class="list-name-truncate">${escapeHTML(list.name)}</span>
+                        <span class="list-count">&nbsp;(${list.notes.length})</span>
+                    </div>
                 </div>
-                <div>
+                <div class="list-actions-zone">
                     <button class="btn-toggle" style="background:none; border:none; color:inherit;" onclick="toggleList('${list.id}')">${list.collapsed ? '▶' : '▼'}</button>
                     <button class="delete-btn" style="background:none; border:none; color:var(--danger); padding:0 2px;" onclick="deleteList('${list.id}')">✕</button>
                 </div>
             </div>
             <div class="list-content ${list.collapsed ? 'collapsed' : ''}">
                 <form onsubmit="addNote(event, '${list.id}')" class="input-group">
-                    <textarea placeholder="Ajouter... (! = urgent, ? = incertain)" required autocomplete="off" rows="1" onkeydown="handleNoteSubmitKey(event)"></textarea>
+                    <textarea placeholder="Ajouter... (! = urgent, ? = incertain)" required autocomplete="off" rows="1" onkeydown="handleNoteSubmitKey(event)" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"></textarea>
                     <button type="submit">+</button>
                 </form>
                 <ul class="notes-dropzone" data-list-id="${list.id}">
@@ -198,7 +200,6 @@ function renderAll() {
                                     <span class="note-date">le ${note.createdStr || 'N/A'}</span>
                                 </div>
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <button class="edit-btn" style="background:none; border:none; color:inherit; opacity:0.4; cursor:pointer; padding:0 2px; font-size:12px;" onclick="enableNoteEdit(event, '${list.id}', '${note.id}')" title="Modifier">✏️</button>
                                     <button class="delete-btn" style="background:none; border:none; color:inherit; opacity:0.5; cursor:pointer; padding:0 2px;" onclick="moveToTrash('${list.id}', '${note.id}')" title="Supprimer">✕</button>
                                 </div>
                             </li>
@@ -336,6 +337,8 @@ window.enableInlineEdit = (event, listId) => {
     const input = document.createElement('input');
     input.type = 'text';
     input.style.padding = "2px 4px";
+    input.style.flexGrow = "1";
+    input.style.minWidth = "0"; 
     input.value = listData.name;
     
     textSpan.style.display = 'none';
@@ -358,11 +361,6 @@ window.enableInlineEdit = (event, listId) => {
 
 window.enableNoteEdit = (event, listId, noteId) => {
     let mainZone = event.currentTarget;
-    // Si l'édition est déclenchée par le bouton crayon ✏️ plutôt que par dblclick
-    if (!mainZone.classList.contains('note-main')) {
-        const noteItem = mainZone.closest('.note-item');
-        mainZone = noteItem.querySelector('.note-main');
-    }
     if (mainZone.querySelector('textarea')) return;
 
     const listData = appData.lists.find(l => l.id === listId);
@@ -375,7 +373,6 @@ window.enableNoteEdit = (event, listId, noteId) => {
 
     const textarea = document.createElement('textarea');
     textarea.value = noteData.text;
-    textarea.rows = noteData.text.split('\n').length || 2;
     textarea.style.fontFamily = "inherit";
     textarea.style.fontSize = "inherit";
     textarea.style.width = "100%";
@@ -385,11 +382,20 @@ window.enableNoteEdit = (event, listId, noteId) => {
     textarea.style.color = "var(--text)";
     textarea.style.border = "1px solid var(--border)";
     textarea.style.borderRadius = "3px";
-    textarea.style.resize = "vertical";
+    textarea.style.resize = "none";
+    textarea.style.overflowY = "hidden";
 
     textSpan.style.display = 'none';
     dateSpan.style.display = 'none';
     mainZone.insertBefore(textarea, dateSpan);
+
+    const autoResize = () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    };
+    textarea.addEventListener('input', autoResize);
+    autoResize();
+
     textarea.focus();
     textarea.select();
 
@@ -411,7 +417,6 @@ window.enableNoteEdit = (event, listId, noteId) => {
             textarea.removeEventListener('blur', saveNoteChange);
             renderAll();
         }
-        // Sur bureau, Entrée sans Maj valide les modifications
         if (e.key === 'Enter' && !e.shiftKey && !window.matchMedia('(max-width: 768px)').matches) {
             e.preventDefault();
             saveNoteChange();
@@ -452,6 +457,7 @@ window.addNote = (e, listId) => {
         saveToBrowser();
     }
     input.value = '';
+    input.style.height = 'auto';
     renderAll();
 };
 
@@ -500,7 +506,12 @@ window.restoreFromTrash = (trashIndex) => {
     if (!targetList && appData.lists.length > 0) targetList = appData.lists[0];
 
     if (targetList) {
-        targetList.notes.push({ id: note.id, text: note.text, createdStr: note.createdStr });
+        const parsed = getNoteDisplay(note.text);
+        if (parsed.isPriority) {
+            targetList.notes.unshift({ id: note.id, text: note.text, createdStr: note.createdStr });
+        } else {
+            targetList.notes.push({ id: note.id, text: note.text, createdStr: note.createdStr });
+        }
     } else {
         appData.trash.unshift(note);
     }

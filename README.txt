@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v1.30.0
+Version : v1.34.1
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 Note    : Cette application est fièrement co-développée avec l'aide 
@@ -15,6 +15,7 @@ Juul_Listes-Compactes est un gestionnaire de tâches et de listes épuré,
 conçu pour offrir une productivité maximale sans fioritures.
 L'interface a été densifiée au maximum pour éliminer le défilement inutile et 
 permettre une vision globale d'un seul coup d'œil.
+
 Caractéristiques principales :
 - Co-développement assisté par IA pour un code agile et optimisé.
 - Interface ultra-compacte et minimaliste.
@@ -25,10 +26,12 @@ Caractéristiques principales :
 - Recherche et filtrage instantanés.
 - Confidentialité totale : stockage local (LocalStorage), aucun compte requis.
 - Indicateur de stockage en temps réel intégré au footer.
+
 Fiche Technique :
 - Technologies : HTML5, CSS3 (Variables), JavaScript natif (ES6).
 - Librairie externe : SortableJS (via CDN).
 - Limite de stockage : ~5 Mo (5120 Ko) max via LocalStorage.
+
 ------------------------------------------------------------------------
 2. STRUCTURE DU PROJET (CONTENU DU DOSSIER)
 ------------------------------------------------------------------------
@@ -57,15 +60,15 @@ B. GESTION DES LISTES
 - Créer une liste : Ouvrez le menu "⚙️ Menu", saisissez le nom dans le champ 
   dédié et validez.
 - Replier / Déplier : Cliquez sur la flèche (▶ ou ▼) à côté du titre.
-Le bouton "↕️ Replier" en haut agit sur toutes les listes en même temps.
+  Le bouton "↕️ Replier" en haut agit sur toutes les listes en même temps.
 - Renommer : Double-cliquez sur le texte du titre d'une liste, modifiez-le, 
   puis appuyez sur Entrée ou cliquez à l'extérieur.
 - Supprimer : Cliquez sur la croix rouge (✕) à droite du titre.
   Les notes sont automatiquement envoyées dans l'historique.
 
-C. GESTION DES NOTES (TÂCHES MULTILIGNES)
+C. GESTION DES NOTES (TÂCHES MULTILIGNES AUTOMATIQUES)
 - Ajouter une note : Saisissez votre texte dans le champ "Ajouter..." de la 
-  liste concernée et validez. 
+  liste concernée et validez. La zone s'agrandit automatiquement à la saisie.
   * Sur Ordinateur : Appuyez sur Entrée pour valider directement. Utilisez Maj+Entrée 
     pour faire un saut de ligne.
   * Sur Mobile : Utilisez la touche Entrée classique de votre clavier tactile pour faire
@@ -76,8 +79,9 @@ C. GESTION DES NOTES (TÂCHES MULTILIGNES)
 - Hack d'Incertitude / Question (À vérifier) : Si votre texte commence par un 
   point d'interrogation (ex: "?Vérifier les chiffres"), la tâche se colore en 
   jaune et s'ajoute normalement en bas de sa liste.
-- Modifier : Cliquez sur l'icône crayon (✏️) à côté de la note (idéal sur mobile)
-  ou double-cliquez sur le texte de la note (sur ordinateur) pour passer en mode édition.
+- Modifier : Double-cliquez sur le corps de la note (sur PC comme sur Mobile) 
+  pour basculer instantanément en mode édition. Le champ s'ajuste immédiatement
+  à la taille de la note.
 - Supprimer : Cliquez sur la croix grise (✕) à droite de la note pour l'envoyer 
   à la corbeille.
 
@@ -85,7 +89,7 @@ D. GLISSER-DÉPOSER (SORTABLEJS)
 - Pour réorganiser les listes : Restez appuyé sur l'icône "☰" à gauche du titre 
   et déplacez le bloc verticalement.
 - Pour déplacer les notes : Restez appuyé sur la tâche pour changer son ordre 
-  dans sa liste ou la transférer vers une autre liste.
+  dans sa liste ou la transfert vers une autre liste.
 
 E. RECHERCHE ET FILTRAGE
 - Tapez un mot dans la barre de recherche supérieure pour filtrer instantanément 
@@ -114,6 +118,18 @@ Accessibles depuis le panneau "⚙️ Menu" :
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
 ------------------------------------------------------------------------
+v1.34.1 - Amélioration restauration : Les notes restaurées marquées comme importantes ('!') 
+          sont désormais automatiquement réinsérées en début de liste.
+v1.34.0 - Correctif d'affichage : Ajout d'une zone flex-shrink dédiée aux actions de 
+          liste (.list-actions-zone) pour empêcher le bouton de suppression de passer à 
+          la ligne sous le bouton de repli lorsque le titre est très long.
+v1.33.0 - Correction d'affichage : ajout de points de suspension (troncature) 
+          pour les noms de listes très longs qui dépassaient l'écran. 
+          Le compteur de tâches (X) a été désolidarisé pour rester toujours visible.
+v1.32.0 - Hauteur dynamique automatique des textareas (zones de texte) 
+          lors de la création et de l'édition adaptées au contenu.
+v1.31.0 - Suppression du bouton crayon d'édition (✏️). Le comportement d'édition 
+          par double-clic (ondblclick) est uniformisé sur PC et sur Mobile.
 v1.30.0 - Prise en charge complète des notes multilignes (sauts de ligne préservés).
           Changement des champs d'entrée en textareas dynamiques.
           Ajout d'un bouton d'édition (✏️) optimisé pour l'usage tactile sur mobile.
@@ -128,7 +144,7 @@ v1.27.1 - Correctif accessibilité : Ajustement des couleurs de la catégorie 'I
           en mode sombre. Le texte passe au jaune/or mat pour éviter la fatigue visuelle.
 v1.27.0 - Ajout d'une catégorie "Incertain / À vérifier" via le préfixe '?'.
           Ces notes s'ajoutent en bas de liste et prennent une couleur jaune.
-v1.26.0 - Modification comportementale : Les notes prioritaires (débutant par '!') 
+v1.26.0 - Modification comportementale : Les notes prioritaires (débutant par '!') \
           sont désormais ajoutées au sommet de la liste à la création.
 v1.25.0 - Ajout du suivi de la taille du LocalStorage dans le footer avec ratio.
 v1.24.0 - Intégration du système de rappel et d'alerte visuelle de sauvegarde.
