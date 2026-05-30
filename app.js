@@ -20,9 +20,24 @@ const btnTheme = document.getElementById('btn-theme');
 const btnToggleAll = document.getElementById('btn-toggle-all');
 
 const STORAGE_KEY = 'ma_pwa_compact_lists_data';
-let appData = { lists: [], trash: [], trashCollapsed: true, panelCollapsed: true, themeMode: 'auto', lastExport: null, lastImport: null };
+const STORAGE_CLOUD_URL_KEY = 'juul_lists_cloud_url';
+const STORAGE_CLOUD_SECRET_KEY = 'juul_lists_cloud_secret';
+
+let appData = { 
+    lists: [], 
+    trash: [], 
+    trashCollapsed: true, 
+    panelCollapsed: true, 
+    themeMode: 'auto', 
+    lastExport: null, 
+    lastImport: null,
+    lastLocalChange: null,
+    lastCloudSync: null
+};
+
 let searchQuery = '';
 let activeSortableInstances = [];
+let cloudSyncTimer = null;
 
 function init() {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -34,6 +49,8 @@ function init() {
             if (appData.lastImport === undefined) appData.lastImport = null;
             if (appData.panelCollapsed === undefined) appData.panelCollapsed = true;
             if (appData.themeMode === undefined) appData.themeMode = 'auto';
+            if (appData.lastLocalChange === undefined) appData.lastLocalChange = null;
+            if (appData.lastCloudSync === undefined) appData.lastCloudSync = null;
             
             appData.lists.forEach(l => {
                 if (!l.id) l.id = 'list_' + Math.random().toString(36).substr(2, 9);
@@ -70,6 +87,7 @@ function init() {
     });
 
     renderAll();
+    setupCloudEngine();
 }
 
 function resetToDefault() {
@@ -83,12 +101,16 @@ function resetToDefault() {
         panelCollapsed: true,
         themeMode: 'auto',
         lastExport: null,
-        lastImport: null
+        lastImport: null,
+        lastLocalChange: Date.now(),
+        lastCloudSync: null
     };
 }
 
 function saveToBrowser() {
+    appData.lastLocalChange = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    planifierSyncCloud();
 }
 
 function applyThemeEngine() {
@@ -143,7 +165,7 @@ window.handleNoteSubmitKey = (e) => {
 function renderAll() {
     checkBackupReminder();
     if (backupTimestamps) {
-        backupTimestamps.innerHTML = `Export : <b>${formatDate(appData.lastExport)}</b> | Import : <b>${formatDate(appData.lastImport)}</b>`;
+        backupTimestamps.innerHTML = `Export : <b>${formatDate(appData.lastExport)}</b> | Modif : <b>${formatDate(appData.lastLocalChange)}</b>`;
     }
     
     updateStorageMetric();
@@ -606,7 +628,7 @@ window.importData = (event) => {
 
 window.toggleControlPanel = () => { const panel = document.getElementById('control-panel'); appData.panelCollapsed = panel.classList.toggle('hidden'); saveToBrowser(); };
 if (btnReset) {
-    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); init(); } });
+    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); init(); } });
 }
 
 function formatDate(dateObj) { if (!dateObj) return 'jamais'; const d = new Date(dateObj); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
@@ -622,5 +644,124 @@ function getNoteDisplay(text) {
 }
 
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
+
+// ========================================================================
+// MOTEUR DE SYNCHRONISATION CLOUD INTÉGRÉ (V2.0.0)
+// ========================================================================
+
+function updateCloudStatus(msg) {
+    const el = document.getElementById('cloud-status');
+    if (el) el.innerHTML = msg;
+}
+
+function setupCloudEngine() {
+    const urlInput = document.getElementById('input-cloud-url');
+    const secretInput = document.getElementById('input-cloud-secret');
+
+    if (urlInput && secretInput) {
+        urlInput.value = localStorage.getItem(STORAGE_CLOUD_URL_KEY) || '';
+        secretInput.value = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY) || '';
+
+        urlInput.addEventListener('input', (e) => {
+            localStorage.setItem(STORAGE_CLOUD_URL_KEY, e.target.value.trim());
+            initialiserSynchroCloud();
+        });
+        secretInput.addEventListener('input', (e) => {
+            localStorage.setItem(STORAGE_CLOUD_SECRET_KEY, e.target.value.trim());
+            initialiserSynchroCloud();
+        });
+    }
+    initialiserSynchroCloud();
+}
+
+async function initialiserSynchroCloud() {
+    const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
+    const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
+    if (!url || !secret) {
+        updateCloudStatus("☁️ Cloud déconnecté");
+        return;
+    }
+
+    updateCloudStatus("⏳ Connexion cloud...");
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'get', secret: secret })
+        });
+        const res = await response.json();
+        
+        if (res.success) {
+            const cloudData = res.data;
+            const cloudChange = cloudData.lastLocalChange || 0;
+            const localChange = appData.lastLocalChange || 0;
+
+            if (cloudChange > localChange) {
+                appData = cloudData;
+                appData.lastCloudSync = Date.now();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                applyThemeEngine();
+                renderAll();
+                updateCloudStatus("☁️ Synchronisé (Cloud importé)");
+            } else if (localChange > cloudChange) {
+                updateCloudStatus("⏳ Envoi des modifications locales...");
+                await executerSyncCloudDirecte();
+            } else {
+                updateCloudStatus("☁️ À jour");
+            }
+        } else {
+            updateCloudStatus(`❌ Erreur Auth : ${res.error}`);
+        }
+    } catch (err) {
+        updateCloudStatus("❌ Serveur Cloud inaccessible");
+    }
+}
+
+function planifierSyncCloud() {
+    const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
+    const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
+    if (!url || !secret) return;
+
+    updateCloudStatus("⏳ En attente d'inactivité (10s)...");
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(executerSyncCloudDirecte, 10000);
+}
+
+async function executerSyncCloudDirecte() {
+    const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
+    const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
+    if (!url || !secret) return;
+
+    updateCloudStatus("⏳ Sauvegarde cloud...");
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'set', secret: secret, data: appData })
+        });
+        const res = await response.json();
+        if (res.success) {
+            appData.lastCloudSync = Date.now();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            updateCloudStatus("☁️ À jour");
+        } else {
+            updateCloudStatus(`❌ Erreur : ${res.error}`);
+        }
+    } catch (err) {
+        updateCloudStatus("❌ Erreur réseau (Sauvegarde différée)");
+    }
+}
+
+window.addEventListener('beforeunload', () => {
+    if (cloudSyncTimer) {
+        const url = localStorage.getItem(STORAGE_CLOUD_URL_KEY);
+        const secret = localStorage.getItem(STORAGE_CLOUD_SECRET_KEY);
+        if (url && secret) {
+            fetch(url, {
+                method: 'POST',
+                keepalive: true,
+                body: JSON.stringify({ action: 'set', secret: secret, data: appData })
+            });
+        }
+    }
+});
 
 init();

@@ -238,6 +238,27 @@
             margin-bottom: 8px;
             font-size: 12px;
         }
+        .cloud-config-box {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+        }
+        .cloud-config-box label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .cloud-config-box input {
+            width: 100%;
+            padding: 4px 6px;
+            margin-bottom: 5px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: var(--app-bg);
+            color: var(--text);
+            box-sizing: border-box;
+            font-size: 11px;
+        }
         .backup-alert {
             font-size: 11px;
             padding: 4px 8px;
@@ -261,6 +282,10 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
+        }
+        .cloud-status-indicator {
+            font-weight: bold;
+            font-size: 11px;
         }
 
         button { cursor: pointer; }
@@ -293,6 +318,12 @@
                 <button id="btn-reset" style="padding: 3px 6px; color: var(--danger)">🗑️ Reset Global</button>
                 <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importData(event)">
             </div>
+            
+            <div class="cloud-config-box">
+                <label>☁️ Synchronisation Cloud</label>
+                <input type="text" id="input-cloud-url" placeholder="URL Web App Google Apps Script..." autocomplete="off">
+                <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
+            </div>
         </div>
 
         <div id="lists-container"></div>
@@ -300,8 +331,9 @@
 
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
+            <div id="cloud-status" class="cloud-status-indicator">☁️ Cloud déconnecté</div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 1.34.1</div>
+            <div class="app-version">Version 2.0.0</div>
         </footer>
 
     </div>

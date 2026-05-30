@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compact-lists-v1.34.1';
+const CACHE_NAME = 'compact-lists-v2.0.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW : Mise en cache des ressources de base');
+      console.log('SW : Mise en cache des ressources de base V2');
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );

@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v1.34.1
+Version : v2.0.0 (Mise à jour Cloud Majeure)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 Note    : Cette application est fièrement co-développée avec l'aide 
@@ -24,131 +24,81 @@ Caractéristiques principales :
 - Organisation dynamique par Glisser-Déposer (SortableJS).
 - Système visuel d'urgence et de statut (Code couleur Rouge/Jaune).
 - Recherche et filtrage instantanés.
-- Confidentialité totale : stockage local (LocalStorage), aucun compte requis.
-- Indicateur de stockage en temps réel intégré au footer.
+- NOUVEAU V2.0.0 : Synchronisation cloud automatique via API Google Apps Script.
+- Sécurité renforcée : Vos clés cloud restent locales, rien n'est exposé sur GitHub.
+- Gestion intelligente des conflits multi-appareils via doubles marqueurs temporels.
+- Sauvegarde locale d'urgence par fichier JSON conservée.
 
 Fiche Technique :
-- Technologies : HTML5, CSS3 (Variables), JavaScript natif (ES6).
+- Technologies : HTML5, CSS3, JavaScript natif (ES6).
 - Librairie externe : SortableJS (via CDN).
-- Limite de stockage : ~5 Mo (5120 Ko) max via LocalStorage.
+- Limite de stockage local : ~5 Mo (5120 Ko) max via LocalStorage.
 
 ------------------------------------------------------------------------
 2. STRUCTURE DU PROJET (CONTENU DU DOSSIER)
 ------------------------------------------------------------------------
 Le dossier de l'application doit impérativement contenir les fichiers suivants :
 
- ├── index.html       -> Interface utilisateur et styles CSS (variables & thèmes)
- ├── app.js           -> Logique applicative, gestion du stockage et des événements
- ├── sw.js            -> Service Worker gérant le cache et le mode hors ligne
+ ├── index.html       -> Interface utilisateur, styles CSS compacts et panneau Cloud
+ ├── app.js           -> Logique applicative, moteur de debounce (10s) et synchro API
+ ├── sw.js            -> Service Worker gérant le cache v2.0.0 et le mode dégradé
  ├── manifest.json    -> Fichier de configuration PWA (icônes, couleurs, nom)
  └── README.txt       -> Le présent fichier d'information et mode d'emploi
 
 ------------------------------------------------------------------------
-3. MODE D'EMPLOI & INSTALLATION
+3. LE NOUVEAU SYSTÈME CLOUD (V2.0.0)
+------------------------------------------------------------------------
+Pour activer la synchronisation automatique :
+1. Ouvrez le volet "⚙️ Menu".
+2. Dans la section "☁️ Synchronisation Cloud", collez votre URL Google Apps Script.
+3. Saisissez votre clé secrète.
+4. L'application vérifie l'état et affiche un indicateur dans le footer.
+
+Fonctionnement de l'automatisation :
+- Anti-Rebond (Debounce 10s) : Les données sont écrites immédiatement en local, 
+  mais l'envoi cloud attend 10 secondes d'inactivité complète pour préserver les quotas.
+- Sauvegarde à la fermeture : Si vous fermez l'onglet pendant le décompte des 10s, 
+  un système d'urgence transmet les données de manière synchrone via l'API Keepalive.
+- Résolution des conflits : Au démarrage, l'application compare les timestamps 
+  de modification locale et cloud. La version la plus récente l'emporte automatiquement.
+
+------------------------------------------------------------------------
+4. MODE D'EMPLOI CLASSIQUE
 ------------------------------------------------------------------------
 
 A. INSTALLATION (PWA)
-L'application ne nécessite aucun téléchargement sur un App Store.
-- Sur Ordinateur (Chrome/Edge/Brave) : Cliquez sur l'icône d'installation 
-  (petit écran avec une flèche) située à droite dans la barre d'adresse.
-- Sur Android (Chrome) : Ouvrez le menu (3 points) et sélectionnez 
-  "Ajouter à l'écran d'accueil".
-- Sur iOS (Safari) : Cliquez sur "Partager" (carré avec flèche vers le haut),
-  puis sur "Sur l'écran d'accueil".
+- Sur Ordinateur : Cliquez sur l'icône d'installation dans la barre d'adresse.
+- Sur Android : Menu Chrome (3 points) > "Ajouter à l'écran d'accueil".
+- Sur iOS : Safari > "Partager" > "Sur l'écran d'accueil".
 
 B. GESTION DES LISTES
-- Créer une liste : Ouvrez le menu "⚙️ Menu", saisissez le nom dans le champ 
-  dédié et validez.
+- Créer une liste : Ouvrez "⚙️ Menu", saisissez le nom et validez.
 - Replier / Déplier : Cliquez sur la flèche (▶ ou ▼) à côté du titre.
-  Le bouton "↕️ Replier" en haut agit sur toutes les listes en même temps.
-- Renommer : Double-cliquez sur le texte du titre d'une liste, modifiez-le, 
-  puis appuyez sur Entrée ou cliquez à l'extérieur.
-- Supprimer : Cliquez sur la croix rouge (✕) à droite du titre.
-  Les notes sont automatiquement envoyées dans l'historique.
+- Renommer : Double-cliquez sur le texte du titre d'une liste, modifiez-le, puis Entrée.
+- Supprimer : Cliquez sur la croix rouge (✕) à droite du titre (historisé).
 
-C. GESTION DES NOTES (TÂCHES MULTILIGNES AUTOMATIQUES)
-- Ajouter une note : Saisissez votre texte dans le champ "Ajouter..." de la 
-  liste concernée et validez. La zone s'agrandit automatiquement à la saisie.
-  * Sur Ordinateur : Appuyez sur Entrée pour valider directement. Utilisez Maj+Entrée 
-    pour faire un saut de ligne.
-  * Sur Mobile : Utilisez la touche Entrée classique de votre clavier tactile pour faire
-    un ou plusieurs sauts de ligne, puis appuyez sur le bouton "+" pour ajouter.
-- Hack de Priorité (Urgent) : Si votre texte commence par un point d'exclamation
-  (ex: "!Rapport annuel"), la tâche se colore en rouge vif et se place 
-  automatiquement au tout début (en haut) de sa liste.
-- Hack d'Incertitude / Question (À vérifier) : Si votre texte commence par un 
-  point d'interrogation (ex: "?Vérifier les chiffres"), la tâche se colore en 
-  jaune et s'ajoute normalement en bas de sa liste.
-- Modifier : Double-cliquez sur le corps de la note (sur PC comme sur Mobile) 
-  pour basculer instantanément en mode édition. Le champ s'ajuste immédiatement
-  à la taille de la note.
-- Supprimer : Cliquez sur la croix grise (✕) à droite de la note pour l'envoyer 
-  à la corbeille.
-
-D. GLISSER-DÉPOSER (SORTABLEJS)
-- Pour réorganiser les listes : Restez appuyé sur l'icône "☰" à gauche du titre 
-  et déplacez le bloc verticalement.
-- Pour déplacer les notes : Restez appuyé sur la tâche pour changer son ordre 
-  dans sa liste ou la transfert vers une autre liste.
-
-E. RECHERCHE ET FILTRAGE
-- Tapez un mot dans la barre de recherche supérieure pour filtrer instantanément 
-  le contenu. Si un mot correspond au titre d'une liste, toute la liste reste 
-  visible.
-- Cliquez sur le bouton "✕" de l'input pour vider la recherche.
-
-F. HISTORIQUE & CORBEILLE
-Située en bas de page, la section "🗑️ Historique" liste les éléments supprimés.
-- Cliquez sur "Restaurer" pour renvoyer la tâche dans sa liste d'origine.
-- Cliquez sur la croix rouge (✕) pour une suppression définitive.
-- Cliquez sur "Vider" pour effacer tout l'historique d'un coup.
-
-------------------------------------------------------------------------
-4. OPTIONS SYSTÈME & SÉCURITÉ
-------------------------------------------------------------------------
-Accessibles depuis le panneau "⚙️ Menu" :
-- Thème (🌓 Auto) : Permet de basculer entre le mode Clair, Sombre ou Auto 
-  (qui calque les couleurs sur les préférences de votre système).
-- Exporter (📤) : Utilise l'API File System Access pour forcer la boîte de dialogue 
-  "Enregistrer sous". Permet de choisir l'emplacement exact de la sauvegarde `.json`.
-- Importer (📥) : Permet de charger un fichier de sauvegarde ".json" pour 
-  restaurer vos données sur un autre appareil ou après un nettoyage.
-- Reset Global : Supprime définitivement toutes les données pour repartir à zéro.
+C. GESTION DES NOTES
+- Ajouter une note : Saisissez votre texte dans le champ "Ajouter...". La zone s'agrandit seule.
+  * Sur Ordinateur : Entrée pour valider, Maj+Entrée pour un saut de ligne.
+  * Sur Mobile : Touche Entrée du clavier virtuel pour sauter une ligne, bouton "+" pour ajouter.
+- Code d'Urgence (!) : Commencez par '!' (ex: "!Urgent") pour colorer en rouge et épingler en haut.
+- Code d'Incertitude (?) : Commencez par '?' (ex: "?À vérifier") pour colorer en jaune en bas de liste.
+- Modifier : Double-cliquez sur la note (PC et Mobile) pour passer en édition instantanée.
+- Supprimer : Cliquez sur la croix grise (✕) à droite pour envoyer à l'historique.
 
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
 ------------------------------------------------------------------------
-v1.34.1 - Amélioration restauration : Les notes restaurées marquées comme importantes ('!') 
-          sont désormais automatiquement réinsérées en début de liste.
-v1.34.0 - Correctif d'affichage : Ajout d'une zone flex-shrink dédiée aux actions de 
-          liste (.list-actions-zone) pour empêcher le bouton de suppression de passer à 
-          la ligne sous le bouton de repli lorsque le titre est très long.
-v1.33.0 - Correction d'affichage : ajout de points de suspension (troncature) 
-          pour les noms de listes très longs qui dépassaient l'écran. 
-          Le compteur de tâches (X) a été désolidarisé pour rester toujours visible.
-v1.32.0 - Hauteur dynamique automatique des textareas (zones de texte) 
-          lors de la création et de l'édition adaptées au contenu.
-v1.31.0 - Suppression du bouton crayon d'édition (✏️). Le comportement d'édition 
-          par double-clic (ondblclick) est uniformisé sur PC et sur Mobile.
-v1.30.0 - Prise en charge complète des notes multilignes (sauts de ligne préservés).
-          Changement des champs d'entrée en textareas dynamiques.
-          Ajout d'un bouton d'édition (✏️) optimisé pour l'usage tactile sur mobile.
-          Gestion différenciée de la touche Entrée (Validation sur PC, Saut de ligne sur mobile).
-v1.29.0 - Renommage officiel de l'application en "Juul_Listes-Compactes".
-          Documentation explicite du co-développement humain-IA.
-          Mise à jour des manifestes et du système de cache.
-v1.28.0 - Intégration de l'API File System Access (`showSaveFilePicker`) lors de l'export.
-          Force l'apparition de l'explorateur système pour choisir le dossier d'enregistrement.
-          Système de secours (fallback) conservé pour les navigateurs incompatibles.
-v1.27.1 - Correctif accessibilité : Ajustement des couleurs de la catégorie 'Incertain' (?)
-          en mode sombre. Le texte passe au jaune/or mat pour éviter la fatigue visuelle.
-v1.27.0 - Ajout d'une catégorie "Incertain / À vérifier" via le préfixe '?'.
-          Ces notes s'ajoutent en bas de liste et prennent une couleur jaune.
-v1.26.0 - Modification comportementale : Les notes prioritaires (débutant par '!') \
-          sont désormais ajoutées au sommet de la liste à la création.
-v1.25.0 - Ajout du suivi de la taille du LocalStorage dans le footer avec ratio.
-v1.24.0 - Intégration du système de rappel et d'alerte visuelle de sauvegarde.
-v1.20.0 - Refonte graphique ultra-compacte et gestion native du mode sombre.
-v1.10.0 - Intégration de SortableJS pour le Drag & Drop des notes et des listes.
-v1.00.0 - Version initiale (Création de listes, notes et persistance locale).
+v2.0.0 - Refonte majeure. Intégration de la synchronisation cloud automatique. 
+         Mise en place d'un debounce d'inactivité fixé à 10 secondes. 
+         Gestion des architectures multi-appareils (lastLocalChange et lastCloudSync). 
+         Création de l'interface de configuration sécurisée et masquée.
+v1.34.1 - Amélioration restauration : Les notes prioritaires ('!') sont réinsérées au sommet.
+v1.34.0 - Correctif flex-shrink pour empêcher le débordement des boutons de titre longs.
+v1.33.0 - Troncature dynamique CSS (text-overflow) sur les titres de listes volumineux.
+v1.32.0 - Hauteur dynamique automatique des textareas à la saisie et à la modification.
+v1.31.0 - Uniformisation tactile : Suppression du bouton crayon, édition par double-clic partout.
+v1.30.0 - Support complet des notes multilignes avec comportement d'Entrée différencié PC/Mobile.
+v1.29.0 - Renommage officiel de l'application en "Juul_Listes-Compactes" et mention IA.
+v1.28.0 - Intégration optionnelle de l'API File System Access (showSaveFilePicker) pour l'export.
 ========================================================================
