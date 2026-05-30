@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v2.2.1 (Sécurisation multi-appareils et pare-feu anti-conflits)
+Version : v2.2.0 (Sécurisation multi-appareils et pare-feu anti-conflits)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 

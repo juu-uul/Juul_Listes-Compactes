@@ -780,9 +780,9 @@ function planifierSyncCloud() {
     const localDevice = localStorage.getItem(STORAGE_DEVICE_NAME_KEY);
     if (!url || !secret || !localDevice || localDevice.trim() === '') return;
 
-    updateCloudStatus("⏳ En attente d'inactivité (3s)...");
+    updateCloudStatus("⏳ En attente d'inactivité (10s)...");
     clearTimeout(cloudSyncTimer);
-    cloudSyncTimer = setTimeout(executerSyncCloudDirecte, 3000);
+    cloudSyncTimer = setTimeout(executerSyncCloudDirecte, 10000);
 }
 
 async function executerSyncCloudDirecte() {
