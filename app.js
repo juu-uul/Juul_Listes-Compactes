@@ -23,6 +23,7 @@ const STORAGE_KEY = 'ma_pwa_compact_lists_data';
 const STORAGE_CLOUD_URL_KEY = 'juul_lists_cloud_url';
 const STORAGE_CLOUD_SECRET_KEY = 'juul_lists_cloud_secret';
 const STORAGE_DEVICE_NAME_KEY = 'juul_lists_device_name';
+const STORAGE_CLOUD_DEBOUNCE_KEY = 'juul_lists_cloud_debounce';
 
 let appData = { 
     lists: [], 
@@ -628,10 +629,15 @@ window.importData = (event) => {
 
 window.toggleControlPanel = () => { const panel = document.getElementById('control-panel'); appData.panelCollapsed = panel.classList.toggle('hidden'); saveToBrowser(); };
 if (btnReset) {
-    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); localStorage.removeItem(STORAGE_DEVICE_NAME_KEY); init(); } });
+    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); localStorage.removeItem(STORAGE_DEVICE_NAME_KEY); localStorage.removeItem(STORAGE_CLOUD_DEBOUNCE_KEY); init(); } });
 }
 
-function formatDate(dateObj) { if (!dateObj) return 'jamais'; const d = new Date(dateObj); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+// Format temporel v2.6.0 incluant désormais les secondes (:ss)
+function formatDate(dateObj) { 
+    if (!dateObj) return 'jamais'; 
+    const d = new Date(dateObj); 
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`; 
+}
 
 function getNoteDisplay(text) { 
     const isPriority = text.startsWith('!'); 
@@ -646,18 +652,27 @@ function getNoteDisplay(text) {
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
 // ========================================================================
-// MOTEUR DE SYNCHRONISATION CLOUD ET DE CONFLITS MULTI-APPAREILS (V2.2.0)
+// MOTEUR DE SYNCHRONISATION CLOUD ET DE CONFLITS MULTI-APPAREILS (V2.6.0)
 // ========================================================================
 
-function updateCloudStatus(msg) {
+function updateCloudStatus(msg, type) {
     const el = document.getElementById('cloud-status');
     if (el) el.innerHTML = msg;
+
+    const bubble = document.querySelector('.cloud-floating-bubble');
+    if (bubble) {
+        bubble.classList.remove('bubble-success', 'bubble-warning', 'bubble-danger');
+        if (type) {
+            bubble.classList.add('bubble-' + type);
+        }
+    }
 }
 
 function setupCloudEngine() {
     const urlInput = document.getElementById('input-cloud-url');
     const secretInput = document.getElementById('input-cloud-secret');
     const deviceInput = document.getElementById('input-cloud-device');
+    const debounceInput = document.getElementById('input-cloud-debounce');
     const cloudFieldsContainer = document.getElementById('cloud-fields-container');
     const deviceStatusMsg = document.getElementById('device-status-msg');
 
@@ -702,6 +717,15 @@ function setupCloudEngine() {
         });
     }
 
+    if (debounceInput) {
+        debounceInput.value = localStorage.getItem(STORAGE_CLOUD_DEBOUNCE_KEY) || '10';
+        debounceInput.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value);
+            if (isNaN(val) || val < 1) val = 1; 
+            localStorage.setItem(STORAGE_CLOUD_DEBOUNCE_KEY, val.toString());
+        });
+    }
+
     const btnAcceptCloud = document.getElementById('btn-resolve-accept-cloud');
     const btnForceLocal = document.getElementById('btn-resolve-force-local');
     if (btnAcceptCloud && btnForceLocal) {
@@ -718,15 +742,15 @@ async function initialiserSynchroCloud() {
     const localDevice = localStorage.getItem(STORAGE_DEVICE_NAME_KEY);
 
     if (!localDevice || localDevice.trim() === '') {
-        updateCloudStatus("⚠️ Config incomplète (Nom requis)");
+        updateCloudStatus("⚠️ Config incomplète (Nom requis)", "warning");
         return;
     }
     if (!url || !secret) {
-        updateCloudStatus("☁️ Cloud déconnecté");
+        updateCloudStatus("☁️ Cloud déconnecté", "warning");
         return;
     }
 
-    updateCloudStatus("⏳ Connexion cloud...");
+    updateCloudStatus("⏳ Connexion cloud...", "warning");
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -738,7 +762,7 @@ async function initialiserSynchroCloud() {
             const cloudData = res.data;
             
             if (!cloudData) {
-                updateCloudStatus("⏳ Premier envoi au cloud...");
+                updateCloudStatus("⏳ Premier envoi au cloud...", "warning");
                 await executerSyncCloudDirecte();
                 return;
             }
@@ -747,10 +771,9 @@ async function initialiserSynchroCloud() {
             const localChange = appData.lastLocalChange || 0;
             const lastCloudDevice = cloudData.lastDevice || 'Appareil Inconnu';
 
-            // INTERCEPTION DE SÉCURITÉ CONTRE LES CONFLITS MULTI-APPAREILS
             if (lastCloudDevice !== localDevice && cloudChange !== localChange) {
                 ouvrirModaleConflit(localDevice, localChange, lastCloudDevice, cloudChange, cloudData);
-                updateCloudStatus("⚠️ Conflit multi-appareils détecté");
+                updateCloudStatus("⚠️ Conflit multi-appareils détecté", "danger");
             } else {
                 if (cloudChange > localChange) {
                     appData = cloudData;
@@ -758,19 +781,19 @@ async function initialiserSynchroCloud() {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
                     applyThemeEngine();
                     renderAll();
-                    updateCloudStatus("☁️ Synchronisé (Cloud importé)");
+                    updateCloudStatus("☁️ Synchronisé (Cloud importé)", "success");
                 } else if (localChange > cloudChange) {
-                    updateCloudStatus("⏳ Envoi des modifications locales...");
+                    updateCloudStatus("⏳ Envoi des modifications locales...", "warning");
                     await executerSyncCloudDirecte();
                 } else {
-                    updateCloudStatus("☁️ À jour");
+                    updateCloudStatus("☁️ À jour", "success");
                 }
             }
         } else {
-            updateCloudStatus(`❌ Erreur Auth : ${res.error}`);
+            updateCloudStatus(`❌ Erreur Auth : ${res.error}`, "danger");
         }
     } catch (err) {
-        updateCloudStatus("❌ Serveur Cloud inaccessible");
+        updateCloudStatus("❌ Serveur Cloud inaccessible", "danger");
     }
 }
 
@@ -780,9 +803,10 @@ function planifierSyncCloud() {
     const localDevice = localStorage.getItem(STORAGE_DEVICE_NAME_KEY);
     if (!url || !secret || !localDevice || localDevice.trim() === '') return;
 
-    updateCloudStatus("⏳ En attente d'inactivité (10s)...");
+    const debounceSec = parseInt(localStorage.getItem(STORAGE_CLOUD_DEBOUNCE_KEY)) || 10;
+    updateCloudStatus(`⏳ En attente d'inactivité (${debounceSec}s)...`, "warning");
     clearTimeout(cloudSyncTimer);
-    cloudSyncTimer = setTimeout(executerSyncCloudDirecte, 10000);
+    cloudSyncTimer = setTimeout(executerSyncCloudDirecte, debounceSec * 1000);
 }
 
 async function executerSyncCloudDirecte() {
@@ -793,9 +817,8 @@ async function executerSyncCloudDirecte() {
     if (!localDevice || localDevice.trim() === '') return;
     if (!url || !secret) return;
 
-    updateCloudStatus("⏳ Sauvegarde cloud...");
+    updateCloudStatus("⏳ Sauvegarde cloud...", "warning");
     
-    // Ajout de la signature d'appareil unique avant l'envoi
     appData.lastDevice = localDevice;
 
     try {
@@ -807,29 +830,53 @@ async function executerSyncCloudDirecte() {
         if (res.success) {
             appData.lastCloudSync = Date.now();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            updateCloudStatus("☁️ À jour");
+            updateCloudStatus("☁️ À jour", "success");
         } else {
-            updateCloudStatus(`❌ Erreur : ${res.error}`);
+            updateCloudStatus(`❌ Erreur : ${res.error}`, "danger");
         }
     } catch (err) {
-        updateCloudStatus("❌ Erreur réseau (Sauvegarde différée)");
+        updateCloudStatus("❌ Erreur réseau (Sauvegarde différée)", "danger");
     }
 }
 
+// Fonction de génération d'interface modale mise à jour v2.6.0
 function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudData) {
     currentCloudPayload = cloudData;
-
-    const localCount = appData.lists ? appData.lists.length : 0;
-    const cloudCount = cloudData.lists ? cloudData.lists.length : 0;
 
     document.getElementById('conflict-local-device').textContent = localDevice;
     document.getElementById('conflict-cloud-device').textContent = cloudDevice;
     
-    document.getElementById('conflict-local-date').textContent = formatDate(localTs);
-    document.getElementById('conflict-cloud-date').textContent = formatDate(cloudTs);
+    // 1. Traitement & mise en valeur de la date la plus récente
+    const localDateEl = document.getElementById('conflict-local-date');
+    const cloudDateEl = document.getElementById('conflict-cloud-date');
     
-    document.getElementById('conflict-local-volume').textContent = `${localCount} liste(s)`;
-    document.getElementById('conflict-cloud-volume').textContent = `${cloudCount} liste(s)`;
+    localDateEl.innerHTML = formatDate(localTs);
+    cloudDateEl.innerHTML = formatDate(cloudTs);
+    
+    if (localTs > cloudTs) {
+        localDateEl.innerHTML += ' <span style="color: var(--sync-success); font-weight: bold; white-space: nowrap;">✨ (Plus récent)</span>';
+        localDateEl.style.fontWeight = 'bold';
+    } else if (cloudTs > localTs) {
+        cloudDateEl.innerHTML += ' <span style="color: var(--sync-success); font-weight: bold; white-space: nowrap;">✨ (Plus récent)</span>';
+        cloudDateEl.style.fontWeight = 'bold';
+    }
+    
+    // 2. Traitement détaillé du volume (listes + décompte par liste)
+    const générerHTMLVolumeDétaillé = (structureListes) => {
+        if (!structureListes || structureListes.length === 0) {
+            return '<span style="color: var(--text-muted); italic">Aucune liste</span>';
+        }
+        return `<ul style="margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.3; max-height: 150px; overflow-y: auto;">` +
+            structureListes.map(l => `
+                <li style="margin-bottom: 2px;">
+                    ${escapeHTML(l.name)} : <b>${l.notes ? l.notes.length : 0}</b>
+                </li>
+            `).join('') +
+            `</ul>`;
+    };
+
+    document.getElementById('conflict-local-volume').innerHTML = générerHTMLVolumeDétaillé(appData.lists);
+    document.getElementById('conflict-cloud-volume').innerHTML = générerHTMLVolumeDétaillé(cloudData.lists);
 
     document.getElementById('conflict-modal').style.display = 'flex';
 }
@@ -837,6 +884,10 @@ function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudDa
 function fermerModaleConflit() {
     document.getElementById('conflict-modal').style.display = 'none';
     currentCloudPayload = null;
+    
+    // Reset styles appliqués à la volée
+    document.getElementById('conflict-local-date').style.fontWeight = 'normal';
+    document.getElementById('conflict-cloud-date').style.fontWeight = 'normal';
 }
 
 function resoudreConflitViaCloud() {
@@ -846,13 +897,13 @@ function resoudreConflitViaCloud() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
     applyThemeEngine();
     renderAll();
-    updateCloudStatus("☁️ À jour (Cloud conservé)");
+    updateCloudStatus("☁️ À jour (Cloud conservé)", "success");
     fermerModaleConflit();
 }
 
 async function resoudreConflitViaLocal() {
     fermerModaleConflit();
-    updateCloudStatus("⏳ Forçage de la version locale...");
+    updateCloudStatus("⏳ Forçage de la version locale...", "warning");
     await executerSyncCloudDirecte();
 }
 

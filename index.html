@@ -23,6 +23,10 @@
             --question-border: #fde68a;
             --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
+            /* Indicateurs Cloud v2.6.0 */
+            --sync-success: #198754;
+            --sync-warning: #f59e0b;
+            --sync-danger: #dc3545;
         }
         .dark-theme {
             --bg: #121212;
@@ -40,6 +44,10 @@
             --question-border: #3d301a;
             --question-text: #cca43b;
             --shadow: rgba(0, 0, 0, 0.4);
+            /* Indicateurs Cloud v2.6.0 Dark */
+            --sync-success: #4ade80;
+            --sync-warning: #fbbf24;
+            --sync-danger: #f87171;
         }
         
         body {
@@ -304,6 +312,7 @@
             gap: 8px;
             box-shadow: 0 3px 12px var(--shadow);
             z-index: 5000;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .cloud-status-indicator {
             font-weight: bold;
@@ -311,6 +320,7 @@
             white-space: nowrap;
             display: flex;
             align-items: center;
+            transition: color 0.3s ease;
         }
         .btn-sync-floating {
             background: none;
@@ -322,6 +332,34 @@
             justify-content: center;
             cursor: pointer;
         }
+
+        /* Système v2.6.0 : Remplissage complet et gestion du contraste de lisibilité */
+        .bubble-success { 
+            background-color: var(--sync-success) !important; 
+            border-color: var(--sync-success) !important; 
+        }
+        .bubble-success #cloud-status { color: #ffffff !important; }
+        .bubble-success .btn-sync-floating { color: #ffffff !important; }
+        .dark-theme .bubble-success #cloud-status { color: #121212 !important; }
+        .dark-theme .bubble-success .btn-sync-floating { color: #121212 !important; }
+        
+        .bubble-warning { 
+            background-color: var(--sync-warning) !important; 
+            border-color: var(--sync-warning) !important; 
+        }
+        .bubble-warning #cloud-status { color: #121212 !important; }
+        .bubble-warning .btn-sync-floating { color: #121212 !important; }
+        .dark-theme .bubble-warning #cloud-status { color: #121212 !important; }
+        .dark-theme .bubble-warning .btn-sync-floating { color: #121212 !important; }
+        
+        .bubble-danger { 
+            background-color: var(--sync-danger) !important; 
+            border-color: var(--sync-danger) !important; 
+        }
+        .bubble-danger #cloud-status { color: #ffffff !important; }
+        .bubble-danger .btn-sync-floating { color: #ffffff !important; }
+        .dark-theme .bubble-danger #cloud-status { color: #121212 !important; }
+        .dark-theme .bubble-danger .btn-sync-floating { color: #121212 !important; }
 
         @media (min-width: 650px) {
             .cloud-floating-bubble {
@@ -372,6 +410,8 @@
                     <input type="text" id="input-cloud-url" placeholder="URL Web App Google Apps Script..." autocomplete="off">
                     <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Clé secrète de chiffrement :</label>
                     <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
+                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Délai d'inactivité avant envoi (en secondes) :</label>
+                    <input type="number" id="input-cloud-debounce" min="1" max="300" placeholder="10" autocomplete="off">
                 </div>
             </div>
         </div>
@@ -382,7 +422,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 2.2.0</div>
+            <div class="app-version">Version 2.6.0</div>
         </footer>
 
     </div>
@@ -393,7 +433,7 @@
     </div>
 
     <div id="conflict-modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
-        <div style="background: var(--surface); max-width: 500px; width: 100%; border-radius: 6px; padding: 20px; box-shadow: 0 10px 25px var(--shadow); border: 2px solid var(--primary); box-sizing: border-box; color: var(--text); font-size: 13px;">
+        <div style="background: var(--surface); max-width: 540px; width: 100%; border-radius: 6px; padding: 20px; box-shadow: 0 10px 25px var(--shadow); border: 2px solid var(--primary); box-sizing: border-box; color: var(--text); font-size: 13px;">
             <h3 style="color: var(--danger); margin-top: 0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 15px;">
                 ⚠️ Conflit de Synchronisation Multi-Appareils
             </h3>
@@ -404,26 +444,26 @@
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--border);">
-                        <th style="padding: 6px 4px; font-weight: bold;">Critères</th>
-                        <th style="padding: 6px 4px; color: var(--text-muted);">Version Locale (Cet appareil)</th>
-                        <th style="padding: 6px 4px; color: var(--primary);">Version Cloud</th>
+                        <th style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Critères</th>
+                        <th style="padding: 6px 4px; color: var(--text-muted); vertical-align: top;">Version Locale (Cet appareil)</th>
+                        <th style="padding: 6px 4px; color: var(--primary); vertical-align: top;">Version Cloud</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 6px 4px; font-weight: bold;">Appareil</td>
-                        <td id="conflict-local-device" style="padding: 6px 4px;">-</td>
-                        <td id="conflict-cloud-device" style="padding: 6px 4px; font-weight: bold;">-</td>
+                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Appareil</td>
+                        <td id="conflict-local-device" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-cloud-device" style="padding: 6px 4px; font-weight: bold; vertical-align: top;">-</td>
                     </tr>
                     <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 6px 4px; font-weight: bold;">Date modif.</td>
-                        <td id="conflict-local-date" style="padding: 6px 4px;">-</td>
-                        <td id="conflict-cloud-date" style="padding: 6px 4px;">-</td>
+                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Date modif.</td>
+                        <td id="conflict-local-date" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-cloud-date" style="padding: 6px 4px; vertical-align: top;">-</td>
                     </tr>
                     <tr>
-                        <td style="padding: 6px 4px; font-weight: bold;">Volume</td>
-                        <td id="conflict-local-volume" style="padding: 6px 4px;">-</td>
-                        <td id="conflict-cloud-volume" style="padding: 6px 4px;">-</td>
+                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Volume</td>
+                        <td id="conflict-local-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-cloud-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
                     </tr>
                 </tbody>
             </table>
