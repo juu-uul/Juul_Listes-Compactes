@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compact-lists-v2.6.0';
+const CACHE_NAME = 'compact-lists-v2.7.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW : Mise en cache des ressources de base V2.6.0');
+      console.log('SW : Mise en cache des ressources de base V2.7.0');
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );
@@ -34,28 +34,45 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  // Sécurité Synchro : Ne pas intercepter ni mettre en cache les requêtes vers l'API Google Apps Script
+  if (event.request.url.includes('script.google.com')) {
+    return; // Laisse le navigateur gérer la requête réseau normalement
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
           }
-          return new Response('Connexion Internet requise pour cette ressource.', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
-          });
+          return networkResponse;
+        })
+        .catch(() => {
+          // Échec silencieux du réseau en arrière-plan (ex: mode hors ligne)
         });
-      })
+
+      // Stratégie Stale-While-Revalidate :
+      // Si la ressource est présente en cache, on la sert immédiatement.
+      // Le réseau mettra à jour le cache en arrière-plan pour la prochaine visite.
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // Si la ressource n'est pas en cache, on attend la réponse du réseau.
+      return fetchPromise.then((networkResponse) => {
+        if (networkResponse) return networkResponse;
+
+        // Si le réseau échoue et qu'aucune ressource n'est en cache, réponse de secours 503.
+        return new Response('Connexion Internet requise pour cette ressource.', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
+        });
+      });
+    })
   );
 });
