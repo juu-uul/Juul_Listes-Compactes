@@ -23,7 +23,7 @@
             --question-border: #fde68a;
             --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
-            /* Indicateurs Cloud v2.7.0 */
+            /* Indicateurs Cloud v2.7.0 / v2.8.0 */
             --sync-success: #198754;
             --sync-warning: #f59e0b;
             --sync-danger: #dc3545;
@@ -44,7 +44,7 @@
             --question-border: #3d301a;
             --question-text: #cca43b;
             --shadow: rgba(0, 0, 0, 0.4);
-            /* Indicateurs Cloud v2.7.0 Dark */
+            /* Indicateurs Cloud v2.7.0 / v2.8.0 Dark */
             --sync-success: #4ade80;
             --sync-warning: #fbbf24;
             --sync-danger: #f87171;
@@ -333,7 +333,7 @@
             cursor: pointer;
         }
 
-        /* Système v2.7.0 : Remplissage complet et gestion du contraste de lisibilité */
+        /* Système v2.7.0+ : Remplissage complet et gestion du contraste de lisibilité */
         .bubble-success { 
             background-color: var(--sync-success) !important; 
             border-color: var(--sync-success) !important; 
@@ -426,7 +426,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 2.7.0</div>
+            <div class="app-version">Version 2.8.0</div>
         </footer>
 
     </div>
@@ -473,6 +473,9 @@
             </table>
 
             <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="btn-resolve-merge" style="background: #0dcaf0; color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🔵 Fusionner les deux versions (Recommandé / Sans perte)
+                </button>
                 <button id="btn-resolve-accept-cloud" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
                     🟢 Télécharger la version Cloud (Écrase cet appareil)
                 </button>

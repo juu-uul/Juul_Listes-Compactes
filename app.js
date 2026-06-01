@@ -632,7 +632,6 @@ if (btnReset) {
     btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); localStorage.removeItem(STORAGE_DEVICE_NAME_KEY); localStorage.removeItem(STORAGE_CLOUD_DEBOUNCE_KEY); init(); } });
 }
 
-// Format temporel v2.6.0 incluant désormais les secondes (:ss)
 function formatDate(dateObj) { 
     if (!dateObj) return 'jamais'; 
     const d = new Date(dateObj); 
@@ -652,7 +651,7 @@ function getNoteDisplay(text) {
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
 // ========================================================================
-// MOTEUR DE SYNCHRONISATION CLOUD ET DE CONFLITS MULTI-APPAREILS (V2.6.0)
+// MOTEUR DE SYNCHRONISATION CLOUD ET DE CONFLITS MULTI-APPAREILS (V2.8.0)
 // ========================================================================
 
 function updateCloudStatus(msg, type) {
@@ -728,9 +727,12 @@ function setupCloudEngine() {
 
     const btnAcceptCloud = document.getElementById('btn-resolve-accept-cloud');
     const btnForceLocal = document.getElementById('btn-resolve-force-local');
-    if (btnAcceptCloud && btnForceLocal) {
+    const btnMerge = document.getElementById('btn-resolve-merge');
+    
+    if (btnAcceptCloud && btnForceLocal && btnMerge) {
         btnAcceptCloud.onclick = resoudreConflitViaCloud;
         btnForceLocal.onclick = resoudreConflitViaLocal;
+        btnMerge.onclick = resoudreConflitViaFusion;
     }
 
     initialiserSynchroCloud();
@@ -839,14 +841,12 @@ async function executerSyncCloudDirecte() {
     }
 }
 
-// Fonction de génération d'interface modale mise à jour v2.6.0
 function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudData) {
     currentCloudPayload = cloudData;
 
     document.getElementById('conflict-local-device').textContent = localDevice;
     document.getElementById('conflict-cloud-device').textContent = cloudDevice;
     
-    // 1. Traitement & mise en valeur de la date la plus récente
     const localDateEl = document.getElementById('conflict-local-date');
     const cloudDateEl = document.getElementById('conflict-cloud-date');
     
@@ -861,7 +861,6 @@ function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudDa
         cloudDateEl.style.fontWeight = 'bold';
     }
     
-    // 2. Traitement détaillé du volume (listes + décompte par liste)
     const générerHTMLVolumeDétaillé = (structureListes) => {
         if (!structureListes || structureListes.length === 0) {
             return '<span style="color: var(--text-muted); italic">Aucune liste</span>';
@@ -884,8 +883,6 @@ function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudDa
 function fermerModaleConflit() {
     document.getElementById('conflict-modal').style.display = 'none';
     currentCloudPayload = null;
-    
-    // Reset styles appliqués à la volée
     document.getElementById('conflict-local-date').style.fontWeight = 'normal';
     document.getElementById('conflict-cloud-date').style.fontWeight = 'normal';
 }
@@ -905,6 +902,67 @@ async function resoudreConflitViaLocal() {
     fermerModaleConflit();
     updateCloudStatus("⏳ Forçage de la version locale...", "warning");
     await executerSyncCloudDirecte();
+}
+
+// Fonction de fusion non-destructive v2.8.0
+async function resoudreConflitViaFusion() {
+    if (!currentCloudPayload) return;
+    
+    const cloudData = currentCloudPayload;
+    
+    // 1. Fusion des Listes et de leurs Notes
+    cloudData.lists.forEach(cloudList => {
+        const localList = appData.lists.find(l => l.id === cloudList.id);
+        
+        if (!localList) {
+            // La liste n'existe pas en local : on l'importe
+            appData.lists.push(cloudList);
+        } else {
+            // La liste existe, on fusionne les notes à l'intérieur
+            cloudList.notes.forEach(cloudNote => {
+                const localNote = localList.notes.find(n => n.id === cloudNote.id);
+                
+                if (!localNote) {
+                    // La note n'existe pas en local : on l'importe
+                    localList.notes.push(cloudNote);
+                } else {
+                    // La note existe, on vérifie si le texte a été modifié
+                    if (localNote.text !== cloudNote.text) {
+                        // Conflit : on conserve la version locale et on importe la version cloud
+                        // avec un nouvel ID et un marqueur visuel pour ne rien perdre.
+                        const mergedNote = {
+                            ...cloudNote,
+                            id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                            text: '[Cloud] ' + cloudNote.text
+                        };
+                        localList.notes.push(mergedNote);
+                    }
+                }
+            });
+        }
+    });
+
+    // 2. Fusion de la Corbeille (historique)
+    if (cloudData.trash && Array.isArray(cloudData.trash)) {
+        cloudData.trash.forEach(cloudTrashItem => {
+            const existsLocally = appData.trash.some(t => t.id === cloudTrashItem.id);
+            if (!existsLocally) {
+                appData.trash.push(cloudTrashItem);
+            }
+        });
+    }
+
+    fermerModaleConflit();
+    updateCloudStatus("⏳ Fusion en cours...", "warning");
+    
+    appData.lastLocalChange = Date.now(); // On force un timestamp local pour marquer la fusion
+    saveToBrowser();
+    applyThemeEngine();
+    renderAll();
+    
+    // Déclenchement immédiat de l'envoi de la version fusionnée parfaite au Cloud
+    await executerSyncCloudDirecte();
+    updateCloudStatus("☁️ Fusionné et à jour", "success");
 }
 
 window.addEventListener('beforeunload', () => {
