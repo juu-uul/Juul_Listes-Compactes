@@ -1,3 +1,11 @@
+/**
+ * Juul_Listes-Compactes
+ * Version: 2.8.1
+ * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
+ */
+
+const APP_VERSION = '2.8.1';
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -651,7 +659,7 @@ function getNoteDisplay(text) {
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
 // ========================================================================
-// MOTEUR DE SYNCHRONISATION CLOUD ET DE CONFLITS MULTI-APPAREILS (V2.8.0)
+// MOTEUR DE SYNCHRONISATION CLOUD ET DE CONFLITS MULTI-APPAREILS
 // ========================================================================
 
 function updateCloudStatus(msg, type) {
@@ -904,7 +912,7 @@ async function resoudreConflitViaLocal() {
     await executerSyncCloudDirecte();
 }
 
-// Fonction de fusion non-destructive v2.8.0
+// Fonction de fusion non-destructive v2.8.1
 async function resoudreConflitViaFusion() {
     if (!currentCloudPayload) return;
     
@@ -929,11 +937,11 @@ async function resoudreConflitViaFusion() {
                     // La note existe, on vérifie si le texte a été modifié
                     if (localNote.text !== cloudNote.text) {
                         // Conflit : on conserve la version locale et on importe la version cloud
-                        // avec un nouvel ID et un marqueur visuel pour ne rien perdre.
+                        // avec un nouvel ID et l'émoticône nuage à la fin pour identifier l'origine
                         const mergedNote = {
                             ...cloudNote,
                             id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                            text: '[Cloud] ' + cloudNote.text
+                            text: cloudNote.text + ' ☁️'
                         };
                         localList.notes.push(mergedNote);
                     }
@@ -955,7 +963,7 @@ async function resoudreConflitViaFusion() {
     fermerModaleConflit();
     updateCloudStatus("⏳ Fusion en cours...", "warning");
     
-    appData.lastLocalChange = Date.now(); // On force un timestamp local pour marquer la fusion
+    appData.lastLocalChange = Date.now();
     saveToBrowser();
     applyThemeEngine();
     renderAll();
