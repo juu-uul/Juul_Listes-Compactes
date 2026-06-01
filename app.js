@@ -1,3 +1,11 @@
+/**
+ * Juul_Listes-Compactes
+ * Version: 2.8.1
+ * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
+ */
+
+const APP_VERSION = '2.8.1';
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
