@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compact-lists-v2.8.1';
+const CACHE_NAME = 'compact-lists-v2.8.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,9 +10,9 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW : Mise en cache des ressources de base V2.8.1');
+      console.log('SW : Mise en cache des ressources de base V2.8.0');
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())\
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -56,13 +56,17 @@ self.addEventListener('fetch', (event) => {
         });
 
       // Stratégie Stale-While-Revalidate :
+      // Si la ressource est présente en cache, on la sert immédiatement.
+      // Le réseau mettra à jour le cache en arrière-plan pour la prochaine visite.
       if (cachedResponse) {
         return cachedResponse;
       }
 
+      // Si la ressource n'est pas en cache, on attend la réponse du réseau.
       return fetchPromise.then((networkResponse) => {
         if (networkResponse) return networkResponse;
 
+        // Si le réseau échoue et qu'aucune ressource n'est en cache, réponse de secours 503.
         return new Response('Connexion Internet requise pour cette ressource.', {
           status: 503,
           statusText: 'Service Unavailable',

@@ -23,24 +23,470 @@
             --question-border: #fde68a;
             --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
-            /* Indicateurs Cloud v2.7.0 */
+            /* Indicateurs Cloud v2.7.0 / v2.8.0 */
             --sync-success: #198754;
             --sync-warning: #f59e0b;
             --sync-danger: #dc3545;
         }
         .dark-theme {
             --bg: #121212;
-            --app-bg: #1e1e2e;
-            --surface: #2b2d42;
-            --text: #e9ecef;
-            --border: #495057;
+            --app-bg: #1a1a1a;
+            --surface: #242424;
+            --text: #f5f5f5;
+            --text-muted: #b0b0b0;
+            --border: #3d3d3d;
+            --primary: #3b82f6;
+            --danger: #f87171;
+            --priority-bg: #3b1414;
+            --priority-border: #7f1d1d;
+            --priority-text: #fca5a5;
+            --question-bg: #221c11;
+            --question-border: #3d301a;
+            --question-text: #cca43b;
+            --shadow: rgba(0, 0, 0, 0.4);
+            /* Indicateurs Cloud v2.7.0 / v2.8.0 Dark */
+            --sync-success: #4ade80;
+            --sync-warning: #fbbf24;
+            --sync-danger: #f87171;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 10px; }
-        /* ... reste du CSS ... */
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            min-height: 100vh;
+            background-color: var(--app-bg);
+            box-shadow: 0 0 15px var(--shadow);
+            box-sizing: border-box;
+            padding: 8px 8px 12px 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .search-bar-container {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            min-width: 140px;
+        }
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 4px 26px 4px 6px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: var(--surface);
+            color: var(--text);
+        }
+        .btn-action-header {
+            padding: 4px 16px; 
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .list-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 8px; 
+            padding: 6px 8px;   
+        }
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 4px; 
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 3px;
+        }
+        .list-title-zone {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            min-width: 0;
+            padding-right: 8px;
+        }
+        .list-title-text {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .list-name-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .list-count {
+            white-space: nowrap;
+        }
+        .list-actions-zone {
+            display: flex;
+            align-items: center;
+            gap: 8px; 
+            flex-shrink: 0;
+        }
+        
+        .notes-dropzone {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            min-height: 20px;
+        }
+        
+        .note-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--app-bg);
+            border: 1px solid var(--border);
+            padding: 4px 6px; 
+            margin-bottom: 3px; 
+            border-radius: 3px;
+            color: var(--text);
+        }
+        
+        .priority-high {
+            background-color: var(--priority-bg) !important;
+            border-color: var(--priority-border) !important;
+            color: var(--priority-text) !important;
+        }
+
+        .note-question {
+            background-color: var(--question-bg) !important;
+            border-color: var(--question-border) !important;
+            color: var(--question-text) !important;
+        }
+        
+        .note-main {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        
+        .note-text-span, .note-main span {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .note-date {
+            font-size: 9px; 
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 4px; 
+            align-items: stretch;
+        }
+        
+        .input-group textarea {
+            flex-grow: 1;
+            padding: 5px 6px; 
+            border: 1px solid var(--border);
+            border-radius: 3px 0 0 3px;
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            resize: none;
+            overflow-y: hidden;
+            box-sizing: border-box;
+            height: auto;
+        }
+        
+        .input-group input {
+            flex-grow: 1;
+            padding: 4px 6px; 
+            border: 1px solid var(--border);
+            border-radius: 3px 0 0 3px;
+            background: var(--surface);
+            color: var(--text);
+        }
+        .input-group button {
+            padding: 4px 20px; 
+            border: 1px solid var(--border);
+            border-left: none;
+            border-radius: 0 3px 3px 0;
+            background: var(--primary);
+            color: #ffffff;
+            font-weight: bold;
+        }
+        
+        .collapsed { display: none !important; }
+        .ghost-list { opacity: 0.4; background: #cbd5e1; }
+        .ghost-note { opacity: 0.5; background: #94a3b8; }
+        
+        .control-panel-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .cloud-config-box {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+        }
+        .cloud-config-box label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .cloud-config-box input {
+            width: 100%;
+            padding: 4px 6px;
+            margin-bottom: 5px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: var(--app-bg);
+            color: var(--text);
+            box-sizing: border-box;
+            font-size: 11px;
+        }
+        .backup-alert {
+            font-size: 11px;
+            padding: 4px 8px;
+            margin-bottom: 6px;
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+            color: #856404;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .app-footer {
+            margin-top: auto;
+            padding-top: 10px;
+            padding-bottom: 48px; 
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .cloud-floating-bubble {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 5px 10px 5px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 12px var(--shadow);
+            z-index: 5000;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .cloud-status-indicator {
+            font-weight: bold;
+            font-size: 11px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+        .btn-sync-floating {
+            background: none;
+            border: none;
+            font-size: 14px;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Système v2.7.0+ : Remplissage complet et gestion du contraste de lisibilité */
+        .bubble-success { 
+            background-color: var(--sync-success) !important; 
+            border-color: var(--sync-success) !important; 
+        }
+        .bubble-success #cloud-status { color: #ffffff !important; }
+        .bubble-success .btn-sync-floating { color: #ffffff !important; }
+        .dark-theme .bubble-success #cloud-status { color: #121212 !important; }
+        .dark-theme .bubble-success .btn-sync-floating { color: #121212 !important; }
+        
+        .bubble-warning { 
+            background-color: var(--sync-warning) !important; 
+            border-color: var(--sync-warning) !important; 
+        }
+        .bubble-warning #cloud-status { color: #121212 !important; }
+        .bubble-warning .btn-sync-floating { color: #121212 !important; }
+        .dark-theme .bubble-warning #cloud-status { color: #121212 !important; }
+        .dark-theme .bubble-warning .btn-sync-floating { color: #121212 !important; }
+        
+        .bubble-danger { 
+            background-color: var(--sync-danger) !important; 
+            border-color: var(--sync-danger) !important; 
+        }
+        .bubble-danger #cloud-status { color: #ffffff !important; }
+        .bubble-danger .btn-sync-floating { color: #ffffff !important; }
+        .dark-theme .bubble-danger #cloud-status { color: #121212 !important; }
+        .dark-theme .bubble-danger .btn-sync-floating { color: #121212 !important; }
+
+        @media (min-width: 650px) {
+            .cloud-floating-bubble {
+                right: calc(50% - 325px + 16px);
+            }
+        }
+
+        button { cursor: pointer; }
     </style>
 </head>
 <body>
+
+    <div class="app-container">
+
+	<div class="app-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid var(--border); margin-bottom: 14px;">
+		<h1 style="margin: 0; font-weight: bold; color: var(--text); letter-spacing: -0.3px;">Juul_Listes-Compactes</h1>
+    	</div>
+
+        <div id="alert-container"></div>
+
+        <div class="search-bar-container">
+            <div class="search-input-wrapper">
+                <input type="text" id="input-search" placeholder="🔍 Rechercher une note ou liste..." autocomplete="off">
+                <button id="btn-clear-search" onclick="clearSearch()" class="hidden" style="position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 8px; z-index: 5;">✕</button>
+            </div>
+            <button id="btn-toggle-all" class="btn-action-header" onclick="toggleAllLists()" title="Tout replier / déplier">↕️</button>
+            <button class="btn-action-header" onclick="toggleControlPanel()" title="Configuration & Paramètres">⚙️</button>
+        </div>
+
+        <div id="control-panel" class="control-panel-box hidden">
+            <form id="form-add-list" class="input-group">
+                <input type="text" id="input-list-name" placeholder="Nom de la nouvelle liste..." required autocomplete="off">
+                <button type="submit">Créer Liste</button>
+            </form>
+            <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+                <button id="btn-theme" style="padding: 3px 6px;" onclick="toggleTheme()">🌓 Auto</button>
+                <button style="padding: 3px 6px;" onclick="triggerImport()">📥 Importer</button>
+                <button style="padding: 3px 6px;" onclick="exportData()">📤 Exporter</button>
+                <button id="btn-reset" style="padding: 3px 6px; color: var(--danger)">🗑️ Reset Global</button>
+                <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importData(event)">
+            </div>
+            
+            <div class="cloud-config-box">
+                <label>☁️ Synchronisation Cloud</label>
+                <div style="margin-top: 4px; margin-bottom: 4px;">
+                    <label for="input-cloud-device" style="font-weight: normal; margin-bottom: 2px; font-size: 11px; display: block;">Nom unique de cet appareil :</label>
+                    <input type="text" id="input-cloud-device" placeholder="Ex: iPhone Juul, PC Bureau..." autocomplete="off">
+                    <small id="device-status-msg" style="color: var(--danger); display: block; margin-bottom: 5px; font-size: 10px; font-weight: bold;">⚠️ Un nom d'appareil est obligatoire.</small>
+                </div>
+                <div id="cloud-fields-container" style="transition: opacity 0.2s;">
+                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">URL Web App Google Apps Script :</label>
+                    <input type="text" id="input-cloud-url" placeholder="URL Web App Google Apps Script..." autocomplete="off">
+                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Clé secrète de chiffrement :</label>
+                    <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
+                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Délai d'inactivité avant envoi (en secondes) :</label>
+                    <input type="number" id="input-cloud-debounce" min="1" max="300" placeholder="10" autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        <div id="lists-container"></div>
+        <div id="trash-container"></div>
+
+        <footer class="app-footer">
+            <div id="backup-timestamps"></div>
+            <div id="storage-info"></div>
+            <div class="app-version">Version 2.8.0</div>
+        </footer>
+
+    </div>
+
+    <div class="cloud-floating-bubble">
+        <div id="cloud-status" class="cloud-status-indicator">☁️ Cloud déconnecté</div>
+        <button id="btn-sync-cloud" class="btn-sync-floating" onclick="lancerSynchroManuel()" title="Synchroniser maintenant (Forcer)">🔄</button>
+    </div>
+
+    <div id="conflict-modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+        <div style="background: var(--surface); max-width: 540px; width: 100%; border-radius: 6px; padding: 20px; box-shadow: 0 10px 25px var(--shadow); border: 2px solid var(--primary); box-sizing: border-box; color: var(--text); font-size: 13px;">
+            <h3 style="color: var(--danger); margin-top: 0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 15px;">
+                ⚠️ Conflit de Synchronisation Multi-Appareils
+            </h3>
+            <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 12px; line-height: 1.4;">
+                Les données présentes sur le Cloud proviennent d'un autre appareil. Veuillez choisir la version à conserver pour éviter toute perte accidentelle.
+            </p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Critères</th>
+                        <th style="padding: 6px 4px; color: var(--text-muted); vertical-align: top;">Version Locale (Cet appareil)</th>
+                        <th style="padding: 6px 4px; color: var(--primary); vertical-align: top;">Version Cloud</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Appareil</td>
+                        <td id="conflict-local-device" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-cloud-device" style="padding: 6px 4px; font-weight: bold; vertical-align: top;">-</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Date modif.</td>
+                        <td id="conflict-local-date" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-cloud-date" style="padding: 6px 4px; vertical-align: top;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Volume</td>
+                        <td id="conflict-local-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-cloud-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="btn-resolve-merge" style="background: #0dcaf0; color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🔵 Fusionner les deux versions (Recommandé / Sans perte)
+                </button>
+                <button id="btn-resolve-accept-cloud" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🟢 Télécharger la version Cloud (Écrase cet appareil)
+                </button>
+                <button id="btn-resolve-force-local" style="background: none; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                    🟠 Écraser le Cloud avec ma version Locale
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <script src="app.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
