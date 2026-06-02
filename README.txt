@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v2.8.0 (Fusion non-destructive & Optimisation)
+Version : v2.10.0 (Optimisation Ergonomique UI)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -16,6 +16,7 @@ Juul_Listes-Compactes est un gestionnaire de tâches et de listes épuré,
 conçu pour offrir une productivité maximale sans fioritures.
 L'interface a été densifiée au maximum pour éliminer le défilement inutile et 
 permettre une vision globale d'un seul coup d'œil.
+
 Caractéristiques principales :
 - Co-développement assisté par IA pour un code agile et optimisé.
 - Interface ultra-compacte et minimaliste.
@@ -31,26 +32,28 @@ Caractéristiques principales :
 - Paramétrage personnalisé de la temporisation (debounce) d'envoi automatique.
 - Modale d'arbitrage de conflit haute précision (seconde, état récent, arborescence).
 - Sauvegarde locale d'urgence par fichier JSON conservée.
+
 Fiche Technique :
 - Technologies : HTML5, CSS3, JavaScript natif (ES6).
 - Librairie externe : SortableJS (via CDN).
 - Limite de stockage local : ~5 Mo (5120 Ko) max via LocalStorage.
+
 ------------------------------------------------------------------------
 2. STRUCTURE DU PROJET (CONTENU DU DOSSIER)
 Le dossier de l'application doit impérativement contenir les fichiers suivants :
 
  ├── index.html       -> Interface utilisateur, styles CSS compacts, modale de conflit
  ├── app.js           -> Logique applicative, gestion du debounce et synchro API
- ├── sw.js            -> Service Worker gérant le cache v2.8.0 (Stale-While-Revalidate)
+ ├── sw.js            -> Service Worker gérant le cache v2.10.0 (Stale-While-Revalidate)
  ├── manifest.json    -> Fichier de configuration PWA (icônes, couleurs, nom)
  └── README.txt       -> Le présent fichier d'information et mode d'emploi
 
 ------------------------------------------------------------------------
-3. LE SYSTÈME CLOUD & PROTOCOLE SÉCURITÉ SESSIONS (v2.8.0)
+3. LE SYSTÈME CLOUD & PROTOCOLE SÉCURITÉ SESSIONS (v2.10.0)
 Pour activer la synchronisation automatique :
 1. Ouvrez le volet "⚙️".
 2. Renseignez obligatoirement le champ "Nom unique de cet appareil" (Ex: iPhone Juul, Mac Pro...).
--> Les champs de clé/URL cloud restent verrouillés tant que l'appareil n'a pas de nom.
+   -> Les champs de clé/URL cloud restent verrouillés tant que l'appareil n'a pas de nom.
 3. Collez votre URL Google Apps Script et saisissez votre clé secrète.
 4. Ajustez le champ "Délai d'inactivité avant envoi (en secondes)" si vous souhaitez 
    accélérer ou retarder le déclenchement de la mise à jour automatique (10s par défaut).
@@ -63,13 +66,13 @@ La bulle de synchronisation se remplit intégralement selon l'état actuel de l'
 
 MOTEUR DE RÉSOLUTION DES CONFLITS (HAUTE GRANULARITÉ & FUSION) :
 Si l'appareil distant a modifié le Cloud pendant que vous faisiez des modifications 
-locales, l'interface modale comparative s'affiche.
-Vous avez désormais 3 options :
+locales, l'interface modale comparative s'affiche. Vous avez désormais 3 options :
 - 🔵 FUSION (Recommandé) : Additionne les listes et notes locales et Cloud. En cas de
   modification de la même note sur les deux appareils, le système conservera les deux 
   versions et marquera la note importée avec le tag "[Cloud]".
 - 🟢 TÉLÉCHARGER LE CLOUD : Écrase vos données locales.
 - 🟠 FORCER LE LOCAL : Écrase les données distantes.
+
 ------------------------------------------------------------------------
 4. MODE D'EMPLOI CLASSIQUE
 
@@ -77,21 +80,27 @@ A. INSTALLATION (PWA)
 - Sur Ordinateur : Cliquez sur l'icône d'installation dans la barre d'adresse.
 - Sur Android : Menu Chrome (3 points) > "Ajouter à l'écran d'accueil".
 - Sur iOS : Safari > "Partager" > "Sur l'écran d'accueil".
+
 B. GESTION DES LISTES
 - Créer une liste : Ouvrez "⚙️", saisissez le nom et validez.
 - Replier / Déplier : Cliquez sur la flèche (▶ ou ▼) à côté du titre.
 - Renommer : Double-cliquez sur le texte du titre d'une liste, modifiez-le, puis Entrée.
 - Supprimer : Cliquez sur la croix rouge (✕) à droite du titre (historisé).
+
 C. GESTION DES NOTES
 - Ajouter une note : Saisissez votre texte dans le champ "Ajouter...". La zone s'agrandit seule.
-* Sur Ordinateur : Entrée pour valider, Maj+Entrée pour un saut de ligne.
-* Sur Mobile : Touche Entrée du clavier virtuel, bouton "+" large pour ajouter.
+  * Sur Ordinateur : Entrée pour valider, Maj+Entrée pour un saut de ligne.
+  * Sur Mobile : Touche Entrée du clavier virtuel, bouton "+" large pour ajouter.
 - Code d'Urgence (!) : Commencez par '!' (ex: "!Urgent") pour colorer en rouge et épingler en haut.
 - Code d'Incertitude (?) : Commencez par '?' (ex: "?À vérifier") pour colorer en jaune en bas de liste.
 - Modifier : Double-cliquez sur la note pour passer en édition instantanée.
 - Supprimer : Cliquez sur la croix grise (✕) à droite pour envoyer à l'historique.
+
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v2.10.0 - Optimisation ergonomique : augmentation de la hauteur des boutons d'action 
+          (menu, ajout, listes) et des champs de saisie pour faciliter l'usage tactile.
+v2.9.0 - Mise à jour de maintenance (Version globale et rafraîchissement du cache).
 v2.8.0 - Ajout d'une option de fusion (merge) non-destructive en cas de conflit 
          multi-appareils. L'application combine intelligemment les listes, les notes
          et l'historique sans perte de données, et isole les modifications

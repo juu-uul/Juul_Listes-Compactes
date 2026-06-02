@@ -23,7 +23,7 @@
             --question-border: #fde68a;
             --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
-            /* Indicateurs Cloud v2.7.0 / v2.8.0 */
+            /* Indicateurs Cloud v2.10.0 */
             --sync-success: #198754;
             --sync-warning: #f59e0b;
             --sync-danger: #dc3545;
@@ -44,7 +44,7 @@
             --question-border: #3d301a;
             --question-text: #cca43b;
             --shadow: rgba(0, 0, 0, 0.4);
-            /* Indicateurs Cloud v2.7.0 / v2.8.0 Dark */
+            /* Indicateurs Cloud v2.10.0 Dark */
             --sync-success: #4ade80;
             --sync-warning: #fbbf24;
             --sync-danger: #f87171;
@@ -89,14 +89,15 @@
         }
         .search-input-wrapper input {
             width: 100%;
-            padding: 4px 26px 4px 6px;
+            padding: 8px 26px 8px 8px; /* Augmentation hauteur */
             border: 1px solid var(--border);
             border-radius: 3px;
             background: var(--surface);
             color: var(--text);
+            box-sizing: border-box;
         }
         .btn-action-header {
-            padding: 4px 16px; 
+            padding: 8px 16px; /* Augmentation hauteur (Menu et Toggle All) */
             border: 1px solid var(--border);
             border-radius: 3px;
             background: var(--surface);
@@ -106,6 +107,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            box-sizing: border-box;
         }
 
         .list-block {
@@ -148,7 +151,7 @@
         .list-actions-zone {
             display: flex;
             align-items: center;
-            gap: 8px; 
+            gap: 4px; /* Ajusté pour les nouveaux paddings */
             flex-shrink: 0;
         }
         
@@ -209,7 +212,7 @@
         
         .input-group textarea {
             flex-grow: 1;
-            padding: 5px 6px; 
+            padding: 8px 8px; /* Augmentation hauteur */
             border: 1px solid var(--border);
             border-radius: 3px 0 0 3px;
             background: var(--surface);
@@ -224,20 +227,23 @@
         
         .input-group input {
             flex-grow: 1;
-            padding: 4px 6px; 
+            padding: 8px 8px; /* Augmentation hauteur pour correspondre */
             border: 1px solid var(--border);
             border-radius: 3px 0 0 3px;
             background: var(--surface);
             color: var(--text);
+            box-sizing: border-box;
         }
         .input-group button {
-            padding: 4px 20px; 
+            padding: 8px 20px; /* Augmentation hauteur bouton d'ajout */
             border: 1px solid var(--border);
             border-left: none;
             border-radius: 0 3px 3px 0;
             background: var(--primary);
             color: #ffffff;
             font-weight: bold;
+            cursor: pointer;
+            box-sizing: border-box;
         }
         
         .collapsed { display: none !important; }
@@ -264,7 +270,7 @@
         }
         .cloud-config-box input {
             width: 100%;
-            padding: 4px 6px;
+            padding: 6px;
             margin-bottom: 5px;
             border: 1px solid var(--border);
             border-radius: 3px;
@@ -333,7 +339,7 @@
             cursor: pointer;
         }
 
-        /* Système v2.7.0+ : Remplissage complet et gestion du contraste de lisibilité */
+        /* Système v2.10.0+ : Remplissage complet et gestion du contraste de lisibilité */
         .bubble-success { 
             background-color: var(--sync-success) !important; 
             border-color: var(--sync-success) !important; 
@@ -383,7 +389,7 @@
         <div class="search-bar-container">
             <div class="search-input-wrapper">
                 <input type="text" id="input-search" placeholder="🔍 Rechercher une note ou liste..." autocomplete="off">
-                <button id="btn-clear-search" onclick="clearSearch()" class="hidden" style="position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 8px; z-index: 5;">✕</button>
+                <button id="btn-clear-search" onclick="clearSearch()" class="hidden" style="position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 12px; z-index: 5; cursor: pointer;">✕</button>
             </div>
             <button id="btn-toggle-all" class="btn-action-header" onclick="toggleAllLists()" title="Tout replier / déplier">↕️</button>
             <button class="btn-action-header" onclick="toggleControlPanel()" title="Configuration & Paramètres">⚙️</button>
@@ -395,10 +401,10 @@
                 <button type="submit">Créer Liste</button>
             </form>
             <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
-                <button id="btn-theme" style="padding: 3px 6px;" onclick="toggleTheme()">🌓 Auto</button>
-                <button style="padding: 3px 6px;" onclick="triggerImport()">📥 Importer</button>
-                <button style="padding: 3px 6px;" onclick="exportData()">📤 Exporter</button>
-                <button id="btn-reset" style="padding: 3px 6px; color: var(--danger)">🗑️ Reset Global</button>
+                <button id="btn-theme" style="padding: 4px 8px; cursor: pointer;" onclick="toggleTheme()">🌓 Auto</button>
+                <button style="padding: 4px 8px; cursor: pointer;" onclick="triggerImport()">📥 Importer</button>
+                <button style="padding: 4px 8px; cursor: pointer;" onclick="exportData()">📤 Exporter</button>
+                <button id="btn-reset" style="padding: 4px 8px; color: var(--danger); cursor: pointer;">🗑️ Reset Global</button>
                 <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importData(event)">
             </div>
             
@@ -426,7 +432,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 2.8.0</div>
+            <div class="app-version">Version 2.10.0</div>
         </footer>
 
     </div>

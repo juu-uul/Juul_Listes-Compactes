@@ -1,10 +1,10 @@
 /**
  * Juul_Listes-Compactes
- * Version: 2.8.1
+ * Version: 2.10.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 
-const APP_VERSION = '2.8.1';
+const APP_VERSION = '2.10.0';
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -201,15 +201,15 @@ function renderAll() {
         listBlock.innerHTML = `
             <div class="list-header">
                 <div class="list-title-zone" ondblclick="enableInlineEdit(event, '${list.id}')">
-                    <span class="list-drag-handle" style="color: #adb5bd; font-size:14px; margin-right: 4px; padding: 4px 10px; cursor:move; user-select:none; -webkit-user-select:none;">☰</span>
+                    <span class="list-drag-handle" style="color: #adb5bd; font-size:14px; margin-right: 4px; padding: 6px 10px; cursor:move; user-select:none; -webkit-user-select:none;">☰</span>
                     <div class="list-title-text">
                         <span class="list-name-truncate">${escapeHTML(list.name)}</span>
                         <span class="list-count">&nbsp;(${list.notes.length})</span>
                     </div>
                 </div>
                 <div class="list-actions-zone">
-                    <button class="btn-toggle" style="background:none; border:none; color:inherit;" onclick="toggleList('${list.id}')">${list.collapsed ? '▶' : '▼'}</button>
-                    <button class="delete-btn" style="background:none; border:none; color:var(--danger); padding:0 2px;" onclick="deleteList('${list.id}')">✕</button>
+                    <button class="btn-toggle" style="background:none; border:none; color:inherit; padding: 6px 10px; cursor: pointer;" onclick="toggleList('${list.id}')">${list.collapsed ? '▶' : '▼'}</button>
+                    <button class="delete-btn" style="background:none; border:none; color:var(--danger); padding:6px 10px; cursor: pointer;" onclick="deleteList('${list.id}')">✕</button>
                 </div>
             </div>
             <div class="list-content ${list.collapsed ? 'collapsed' : ''}">
@@ -231,7 +231,7 @@ function renderAll() {
                                     <span class="note-date">le ${note.createdStr || 'N/A'}</span>
                                 </div>
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <button class="delete-btn" style="background:none; border:none; color:inherit; opacity:0.5; cursor:pointer; padding:0 2px;" onclick="moveToTrash('${list.id}', '${note.id}')" title="Supprimer">✕</button>
+                                    <button class="delete-btn" style="background:none; border:none; color:inherit; opacity:0.5; cursor:pointer; padding:6px 8px;" onclick="moveToTrash('${list.id}', '${note.id}')" title="Supprimer">✕</button>
                                 </div>
                             </li>
                         `;
@@ -252,8 +252,8 @@ function renderAll() {
                     <span>🗑️ Historique (${appData.trash.length})</span>
                 </div>
                 <div>
-                    ${appData.trash.length > 0 ? `<button class="delete-btn" style="background:#6c757d; border:none; color:white; border-radius:2px; margin-right:5px; padding: 1px 4px; font-size:10px;" onclick="emptyTrash()">Vider</button>` : ''}
-                    <button class="btn-toggle" style="background:none; border:none; color:inherit;" onclick="toggleTrash()">${appData.trashCollapsed ? '▶' : '▼'}</button>
+                    ${appData.trash.length > 0 ? `<button class="delete-btn" style="background:#6c757d; border:none; color:white; border-radius:2px; margin-right:5px; padding: 4px 8px; font-size:11px; cursor: pointer;" onclick="emptyTrash()">Vider</button>` : ''}
+                    <button class="btn-toggle" style="background:none; border:none; color:inherit; padding: 6px 10px; cursor: pointer;" onclick="toggleTrash()">${appData.trashCollapsed ? '▶' : '▼'}</button>
                 </div>
             </div>
             <div class="list-content ${appData.trashCollapsed ? 'collapsed' : ''}">
@@ -272,8 +272,8 @@ function renderAll() {
                                     <span class="note-date">Créé: ${note.createdStr || '?'} | <span style="color:var(--danger)">Supprimé le: ${note.deletedStr || 'N/A'}</span> (De: ${escapeHTML(note.originListName || 'Inconnu')})</span>
                                 </div>
                                 <div style="display:flex; align-items:center; gap:4px;">
-                                    <button class="btn-restore" style="font-size:10px; padding:1px 4px;" onclick="restoreFromTrash(${note.originalIndex})">Restaurer</button>
-                                    <button class="delete-btn" style="background:none; border:none; color:var(--danger);" onclick="permanentDelete(${note.originalIndex})">✕</button>
+                                    <button class="btn-restore" style="font-size:11px; padding:4px 8px; cursor: pointer;" onclick="restoreFromTrash(${note.originalIndex})">Restaurer</button>
+                                    <button class="delete-btn" style="background:none; border:none; color:var(--danger); padding:6px 8px; cursor: pointer;" onclick="permanentDelete(${note.originalIndex})">✕</button>
                                 </div>
                             </li>
                         `;
@@ -367,7 +367,7 @@ window.enableInlineEdit = (event, listId) => {
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.style.padding = "2px 4px";
+    input.style.padding = "4px 6px";
     input.style.flexGrow = "1";
     input.style.minWidth = "0"; 
     input.value = listData.name;
@@ -408,7 +408,7 @@ window.enableNoteEdit = (event, listId, noteId) => {
     textarea.style.fontSize = "inherit";
     textarea.style.width = "100%";
     textarea.style.boxSizing = "border-box";
-    textarea.style.padding = "2px 4px";
+    textarea.style.padding = "4px 6px";
     textarea.style.background = "var(--surface)";
     textarea.style.color = "var(--text)";
     textarea.style.border = "1px solid var(--border)";
@@ -560,7 +560,7 @@ function checkBackupReminder() {
     if (appData.lastExport === null || (Date.now() - appData.lastExport) > unSemaineMs) {
         const div = document.createElement('div');
         div.className = 'backup-alert';
-        div.innerHTML = `<span>⚠️ Sauvegarde requise.</span> <button onclick="exportData()" style="padding:1px 4px; font-size:10px; background:#fff; border:1px solid #ffecb5; border-radius:2px;">Exporter</button>`;
+        div.innerHTML = `<span>⚠️ Sauvegarde requise.</span> <button onclick="exportData()" style="padding:4px 8px; font-size:11px; background:#fff; border:1px solid #ffecb5; border-radius:2px; cursor:pointer;">Exporter</button>`;
         alertContainer.appendChild(div);
     }
 }
@@ -912,7 +912,7 @@ async function resoudreConflitViaLocal() {
     await executerSyncCloudDirecte();
 }
 
-// Fonction de fusion non-destructive v2.8.1
+// Fonction de fusion non-destructive v2.10.0
 async function resoudreConflitViaFusion() {
     if (!currentCloudPayload) return;
     
