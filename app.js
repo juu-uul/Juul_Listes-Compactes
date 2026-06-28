@@ -1,10 +1,10 @@
 /**
  * Juul_Listes-Compactes
- * Version: 3.3.0
+ * Version: 3.3.1
  * Description: Application PWA avec Sync-on-Focus et surveillance de batterie optimisée.
  */
 
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.3.1';
 let syncReminderInterval = null;
 let lastSyncTimestamp = Date.now();
 
@@ -15,9 +15,11 @@ function startSyncMonitoring() {
     syncReminderInterval = setInterval(() => {
         const minutesSinceLastSync = (Date.now() - lastSyncTimestamp) / 60000;
         const btn = document.getElementById('btn-sync');
+        // Lecture du délai configuré (défaut 30 min)
+        const configuredDelay = parseInt(localStorage.getItem(STORAGE_SYNC_REMINDER_DELAY_KEY)) || 30;
         
-        // Si plus de 30 min sans synchro, on active le rappel visuel
-        if (minutesSinceLastSync > 30 && btn) {
+        // Si plus de X min sans synchro, on active le rappel visuel
+        if (minutesSinceLastSync > configuredDelay && btn) {
             btn.classList.add('sync-warning');
         }
     }, 60000); // Vérifie chaque minute
@@ -28,14 +30,19 @@ function stopSyncMonitoring() {
     syncReminderInterval = null;
 }
 
+// Fonction pour sauvegarder le délai de rappel
+window.saveSyncReminderDelay = (val) => {
+    localStorage.setItem(STORAGE_SYNC_REMINDER_DELAY_KEY, val);
+};
+
 // Écouteur de cycle de vie
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        console.log("V3.3.0 : App active. Synchro immédiate et monitoring démarré.");
+        console.log("V3.3.1 : App active. Synchro immédiate et monitoring démarré.");
         lancerSynchroManuel(); // Synchro au retour
         startSyncMonitoring(); // Monitoring actif
     } else {
-        console.log("V3.3.0 : App cachée. Monitoring arrêté pour économie d'énergie.");
+        console.log("V3.3.1 : App cachée. Monitoring arrêté pour économie d'énergie.");
         stopSyncMonitoring(); // On coupe tout en background
     }
 });
@@ -73,6 +80,7 @@ const STORAGE_CLOUD_URL_KEY = 'juul_lists_cloud_url';
 const STORAGE_CLOUD_SECRET_KEY = 'juul_lists_cloud_secret';
 const STORAGE_DEVICE_NAME_KEY = 'juul_lists_device_name';
 const STORAGE_CLOUD_DEBOUNCE_KEY = 'juul_lists_cloud_debounce';
+const STORAGE_SYNC_REMINDER_DELAY_KEY = 'juul_lists_sync_reminder_delay';
 
 let appData = { 
     lists: [], 
