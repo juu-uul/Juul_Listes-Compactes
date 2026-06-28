@@ -1,15 +1,15 @@
 /**
  * Juul_Listes-Compactes
- * Version: 3.2.0
+ * Version: 3.3.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 
-const APP_VERSION = '3.2.0';
+const APP_VERSION = '3.3.0';
 
 // Sync-on-Focus : Déclenchement automatique lors du retour sur l'app
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        console.log("V3.2.0 : Retour au premier plan, synchro auto...");
+        console.log("V3.3.0 : Retour au premier plan, synchro auto...");
         if (typeof lancerSynchroManuel === 'function') {
             lancerSynchroManuel();
         }
@@ -712,9 +712,13 @@ function updateCloudStatus(msg, type) {
 
     const bubble = document.querySelector('.cloud-floating-bubble');
     if (bubble) {
-        bubble.classList.remove('bubble-success', 'bubble-warning', 'bubble-danger');
+        bubble.classList.remove('bubble-success', 'bubble-warning', 'bubble-danger', 'sync-pulsing');
         if (type) {
             bubble.classList.add('bubble-' + type);
+            // Ajout du retour visuel de pulsation dynamique v3.3.0
+            if (type === 'warning') {
+                bubble.classList.add('sync-pulsing');
+            }
         }
     }
 }

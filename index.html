@@ -367,6 +367,16 @@
         .dark-theme .bubble-danger #cloud-status { color: #121212 !important; }
         .dark-theme .bubble-danger .btn-sync-floating { color: #121212 !important; }
 
+        /* Animation de pulsation pour la synchronisation V3.3.0 */
+        @keyframes syncPulse {
+            0% { box-shadow: 0 3px 12px var(--shadow); transform: scale(1); }
+            50% { box-shadow: 0 3px 22px var(--sync-warning); transform: scale(1.03); }
+            100% { box-shadow: 0 3px 12px var(--shadow); transform: scale(1); }
+        }
+        .sync-pulsing {
+            animation: syncPulse 1.5s infinite ease-in-out;
+        }
+
         @media (min-width: 650px) {
             .cloud-floating-bubble {
                 right: calc(50% - 325px + 16px);
@@ -432,7 +442,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 3.2.0</div>
+            <div class="app-version">Version 3.3.0</div>
         </footer>
 
     </div>
