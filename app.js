@@ -1,58 +1,20 @@
 /**
  * Juul_Listes-Compactes
- * Version: 3.3.1
- * Description: Application PWA avec Sync-on-Focus et surveillance de batterie optimisée.
+ * Version: 3.2.0
+ * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 
-const APP_VERSION = '3.3.1';
-let syncReminderInterval = null;
-let lastSyncTimestamp = Date.now();
+const APP_VERSION = '3.2.0';
 
-// --- Logique Sync-on-Focus et Monitoring Batterie Optimisé ---
-function startSyncMonitoring() {
-    if (syncReminderInterval) return; // Déjà actif
-    
-    syncReminderInterval = setInterval(() => {
-        const minutesSinceLastSync = (Date.now() - lastSyncTimestamp) / 60000;
-        const btn = document.getElementById('btn-sync');
-        // Lecture du délai configuré (défaut 30 min)
-        const configuredDelay = parseInt(localStorage.getItem(STORAGE_SYNC_REMINDER_DELAY_KEY)) || 30;
-        
-        // Si plus de X min sans synchro, on active le rappel visuel
-        if (minutesSinceLastSync > configuredDelay && btn) {
-            btn.classList.add('sync-warning');
-        }
-    }, 60000); // Vérifie chaque minute
-}
-
-function stopSyncMonitoring() {
-    clearInterval(syncReminderInterval);
-    syncReminderInterval = null;
-}
-
-// Fonction pour sauvegarder le délai de rappel
-window.saveSyncReminderDelay = (val) => {
-    localStorage.setItem(STORAGE_SYNC_REMINDER_DELAY_KEY, val);
-};
-
-// Écouteur de cycle de vie
+// Sync-on-Focus : Déclenchement automatique lors du retour sur l'app
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        console.log("V3.3.1 : App active. Synchro immédiate et monitoring démarré.");
-        lancerSynchroManuel(); // Synchro au retour
-        startSyncMonitoring(); // Monitoring actif
-    } else {
-        console.log("V3.3.1 : App cachée. Monitoring arrêté pour économie d'énergie.");
-        stopSyncMonitoring(); // On coupe tout en background
+        console.log("V3.2.0 : Retour au premier plan, synchro auto...");
+        if (typeof lancerSynchroManuel === 'function') {
+            lancerSynchroManuel();
+        }
     }
 });
-
-// Appeler cette fonction dans ton code de succès de synchro existant
-function onSyncSuccess() {
-    lastSyncTimestamp = Date.now();
-    const btn = document.getElementById('btn-sync');
-    if (btn) btn.classList.remove('sync-warning');
-}
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -80,7 +42,6 @@ const STORAGE_CLOUD_URL_KEY = 'juul_lists_cloud_url';
 const STORAGE_CLOUD_SECRET_KEY = 'juul_lists_cloud_secret';
 const STORAGE_DEVICE_NAME_KEY = 'juul_lists_device_name';
 const STORAGE_CLOUD_DEBOUNCE_KEY = 'juul_lists_cloud_debounce';
-const STORAGE_SYNC_REMINDER_DELAY_KEY = 'juul_lists_sync_reminder_delay';
 
 let appData = { 
     lists: [], 
