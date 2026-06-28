@@ -4,7 +4,17 @@
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et résolution de conflits par horodatage (Last-Writer-Wins).
  */
 
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.2.0';
+
+// Sync-on-Focus : Déclenchement automatique lors du retour sur l'app
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        console.log("V3.2.0 : Retour au premier plan, synchro auto...");
+        if (typeof lancerSynchroManuel === 'function') {
+            lancerSynchroManuel();
+        }
+    }
+});
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
