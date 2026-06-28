@@ -1,51 +1,10 @@
 /**
  * Juul_Listes-Compactes
- * Version: 3.3.0
- * Description: Application PWA avec Sync-on-Focus et surveillance de batterie optimisée.
+ * Version: 3.3.1
+ * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 
-const APP_VERSION = '3.3.0';
-let syncReminderInterval = null;
-let lastSyncTimestamp = Date.now();
-
-// --- Logique Sync-on-Focus et Monitoring Batterie Optimisé ---
-function startSyncMonitoring() {
-    if (syncReminderInterval) return; // Déjà actif
-    
-    syncReminderInterval = setInterval(() => {
-        const minutesSinceLastSync = (Date.now() - lastSyncTimestamp) / 60000;
-        const btn = document.getElementById('btn-sync');
-        
-        // Si plus de 5 min sans synchro, on active le rappel visuel
-        if (minutesSinceLastSync > 5 && btn) {
-            btn.classList.add('sync-warning');
-        }
-    }, 60000); // Vérifie chaque minute
-}
-
-function stopSyncMonitoring() {
-    clearInterval(syncReminderInterval);
-    syncReminderInterval = null;
-}
-
-// Écouteur de cycle de vie
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-        console.log("V3.3.0 : App active. Synchro immédiate et monitoring démarré.");
-        lancerSynchroManuel(); // Synchro au retour
-        startSyncMonitoring(); // Monitoring actif
-    } else {
-        console.log("V3.3.0 : App cachée. Monitoring arrêté pour économie d'énergie.");
-        stopSyncMonitoring(); // On coupe tout en background
-    }
-});
-
-// Appeler cette fonction dans ton code de succès de synchro existant
-function onSyncSuccess() {
-    lastSyncTimestamp = Date.now();
-    const btn = document.getElementById('btn-sync');
-    if (btn) btn.classList.remove('sync-warning');
-}
+const APP_VERSION = '3.3.1';
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -73,6 +32,7 @@ const STORAGE_CLOUD_URL_KEY = 'juul_lists_cloud_url';
 const STORAGE_CLOUD_SECRET_KEY = 'juul_lists_cloud_secret';
 const STORAGE_DEVICE_NAME_KEY = 'juul_lists_device_name';
 const STORAGE_CLOUD_DEBOUNCE_KEY = 'juul_lists_cloud_debounce';
+const STORAGE_BACKUP_INTERVAL_KEY = 'juul_lists_backup_interval';
 
 let appData = { 
     lists: [], 
@@ -106,18 +66,11 @@ function init() {
             if (appData.lastCloudSync === undefined) appData.lastCloudSync = null;
             if (appData.lastDevice === undefined) appData.lastDevice = null;
             
-            // Migration silencieuse V3.0.0+ : Ajout des timestamps
             appData.lists.forEach(l => {
                 if (!l.id) l.id = 'list_' + Math.random().toString(36).substr(2, 9);
-                if (!l.lastModified) l.lastModified = Date.now();
                 l.notes.forEach(n => {
                     if (!n.id) n.id = 'note_' + Math.random().toString(36).substr(2, 9);
-                    if (!n.lastModified) n.lastModified = Date.now();
                 });
-            });
-            appData.trash.forEach(t => {
-                if (!t.lastModified) t.lastModified = Date.now();
-                if (!t.deletedTs) t.deletedTs = Date.now();
             });
         } catch (e) {
             resetToDefault();
@@ -152,11 +105,10 @@ function init() {
 }
 
 function resetToDefault() {
-    const now = Date.now();
     appData = {
         lists: [
-            { id: 'l1', name: 'À faire', collapsed: false, lastModified: now, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()), lastModified: now }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()), lastModified: now }] },
-            { id: 'l2', name: 'En cours', collapsed: false, lastModified: now, notes: [] }
+            { id: 'l1', name: 'À faire', collapsed: false, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()) }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()) }] },
+            { id: 'l2', name: 'En cours', collapsed: false, notes: [] }
         ],
         trash: [],
         trashCollapsed: true,
@@ -164,7 +116,7 @@ function resetToDefault() {
         themeMode: 'auto',
         lastExport: null,
         lastImport: null,
-        lastLocalChange: now,
+        lastLocalChange: 0,
         lastCloudSync: null,
         lastDevice: null
     };
@@ -377,13 +329,8 @@ function initSortableEngine() {
                     const noteIndex = fromList.notes.findIndex(n => n.id === noteIdMoved);
                     if (noteIndex !== -1) {
                         const [movedNote] = fromList.notes.splice(noteIndex, 1);
-                        movedNote.lastModified = Date.now();
                         toList.notes.push(movedNote);
                     }
-                    fromList.lastModified = Date.now();
-                    toList.lastModified = Date.now();
-                } else {
-                    toList.lastModified = Date.now();
                 }
 
                 const newNotesOrder = [];
@@ -435,7 +382,6 @@ window.enableInlineEdit = (event, listId) => {
         const newName = input.value.trim();
         if (newName && newName !== listData.name) {
             listData.name = newName;
-            listData.lastModified = Date.now();
             saveToBrowser();
         }
         renderAll();
@@ -492,7 +438,6 @@ window.enableNoteEdit = (event, listId, noteId) => {
         const newText = textarea.value.trim();
         if (newText && newText !== noteData.text) {
             noteData.text = newText;
-            noteData.lastModified = Date.now();
             saveToBrowser();
         }
         renderAll();
@@ -515,13 +460,7 @@ formAddList.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = inputListName.value.trim();
     if (!name) return;
-    appData.lists.push({ 
-        id: 'list_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
-        name: name, 
-        collapsed: false, 
-        notes: [],
-        lastModified: Date.now()
-    });
+    appData.lists.push({ id: 'list_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), name: name, collapsed: false, notes: [] });
     inputListName.value = '';
     saveToBrowser();
     renderAll();
@@ -539,8 +478,7 @@ window.addNote = (e, listId) => {
         const newNoteObj = { 
             id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
             text: text,
-            createdStr: formatDate(new Date()),
-            lastModified: Date.now()
+            createdStr: formatDate(new Date())
         };
 
         if (parsed.isPriority) {
@@ -548,7 +486,6 @@ window.addNote = (e, listId) => {
         } else {
             listData.notes.push(newNoteObj);
         }
-        listData.lastModified = Date.now();
         saveToBrowser();
     }
     input.value = '';
@@ -567,13 +504,10 @@ window.deleteList = (listId) => {
     if (index !== -1) {
         const list = appData.lists[index];
         if (confirm(`Supprimer la liste "${list.name}" ?`)) {
-            const now = Date.now();
             list.notes.forEach(note => {
                 note.originListId = list.id;
                 note.originListName = list.name;
-                note.deletedStr = formatDate(new Date(now));
-                note.deletedTs = now;
-                note.lastModified = now;
+                note.deletedStr = formatDate(new Date());
                 appData.trash.unshift(note);
             });
             appData.lists.splice(index, 1);
@@ -588,15 +522,11 @@ window.moveToTrash = (listId, noteId) => {
     if (!listData) return;
     const noteIndex = listData.notes.findIndex(n => n.id === noteId);
     if (noteIndex !== -1) {
-        const now = Date.now();
         const note = listData.notes.splice(noteIndex, 1)[0];
         note.originListId = listData.id;
         note.originListName = listData.name;
-        note.deletedStr = formatDate(new Date(now));
-        note.deletedTs = now;
-        note.lastModified = now;
+        note.deletedStr = formatDate(new Date());
         appData.trash.unshift(note);
-        listData.lastModified = now;
         saveToBrowser();
     }
     renderAll();
@@ -609,15 +539,11 @@ window.restoreFromTrash = (trashIndex) => {
 
     if (targetList) {
         const parsed = getNoteDisplay(note.text);
-        note.lastModified = Date.now();
-        delete note.deletedTs; // Suppression de la marque de suppression
-        
         if (parsed.isPriority) {
-            targetList.notes.unshift({ id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified });
+            targetList.notes.unshift({ id: note.id, text: note.text, createdStr: note.createdStr });
         } else {
-            targetList.notes.push({ id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified });
+            targetList.notes.push({ id: note.id, text: note.text, createdStr: note.createdStr });
         }
-        targetList.lastModified = Date.now();
     } else {
         appData.trash.unshift(note);
     }
@@ -631,8 +557,9 @@ window.toggleTrash = () => { appData.trashCollapsed = !appData.trashCollapsed; s
 
 function checkBackupReminder() {
     alertContainer.innerHTML = '';
-    const unSemaineMs = 7 * 24 * 60 * 60 * 1000;
-    if (appData.lastExport === null || (Date.now() - appData.lastExport) > unSemaineMs) {
+    const joursAlerte = parseInt(localStorage.getItem(STORAGE_BACKUP_INTERVAL_KEY)) || 7;
+    const alerteMs = joursAlerte * 24 * 60 * 60 * 1000;
+    if (appData.lastExport === null || (Date.now() - appData.lastExport) > alerteMs) {
         const div = document.createElement('div');
         div.className = 'backup-alert';
         div.innerHTML = `<span>⚠️ Sauvegarde requise.</span> <button onclick="exportData()" style="padding:4px 8px; font-size:11px; background:#fff; border:1px solid #ffecb5; border-radius:2px; cursor:pointer;">Exporter</button>`;
@@ -712,7 +639,7 @@ window.importData = (event) => {
 
 window.toggleControlPanel = () => { const panel = document.getElementById('control-panel'); appData.panelCollapsed = panel.classList.toggle('hidden'); saveToBrowser(); };
 if (btnReset) {
-    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); localStorage.removeItem(STORAGE_DEVICE_NAME_KEY); localStorage.removeItem(STORAGE_CLOUD_DEBOUNCE_KEY); init(); } });
+    btnReset.addEventListener('click', () => { if (confirm("Tout effacer ?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CLOUD_URL_KEY); localStorage.removeItem(STORAGE_CLOUD_SECRET_KEY); localStorage.removeItem(STORAGE_DEVICE_NAME_KEY); localStorage.removeItem(STORAGE_CLOUD_DEBOUNCE_KEY); localStorage.removeItem(STORAGE_BACKUP_INTERVAL_KEY); init(); } });
 }
 
 function formatDate(dateObj) { 
@@ -755,6 +682,7 @@ function setupCloudEngine() {
     const secretInput = document.getElementById('input-cloud-secret');
     const deviceInput = document.getElementById('input-cloud-device');
     const debounceInput = document.getElementById('input-cloud-debounce');
+    const backupIntervalInput = document.getElementById('input-backup-interval');
     const cloudFieldsContainer = document.getElementById('cloud-fields-container');
     const deviceStatusMsg = document.getElementById('device-status-msg');
 
@@ -805,6 +733,16 @@ function setupCloudEngine() {
             let val = parseInt(e.target.value);
             if (isNaN(val) || val < 1) val = 1; 
             localStorage.setItem(STORAGE_CLOUD_DEBOUNCE_KEY, val.toString());
+        });
+    }
+
+    if (backupIntervalInput) {
+        backupIntervalInput.value = localStorage.getItem(STORAGE_BACKUP_INTERVAL_KEY) || '7';
+        backupIntervalInput.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value);
+            if (isNaN(val) || val < 1) val = 1;
+            localStorage.setItem(STORAGE_BACKUP_INTERVAL_KEY, val.toString());
+            renderAll();
         });
     }
 
@@ -924,63 +862,6 @@ async function executerSyncCloudDirecte() {
     }
 }
 
-// Fonction utilitaire pour générer le visuel comparatif des volumes V3.1.0
-function genererDiffVolume(localLists, cloudLists) {
-    if ((!localLists || localLists.length === 0) && (!cloudLists || cloudLists.length === 0)) {
-        return ['<span style="color: var(--text-muted); font-style: italic;">Aucune liste</span>', '<span style="color: var(--text-muted); font-style: italic;">Aucune liste</span>'];
-    }
-
-    const allListIds = Array.from(new Set([...(localLists||[]).map(l=>l.id), ...(cloudLists||[]).map(l=>l.id)]));
-    
-    let localHtml = `<ul style="margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.4; max-height: 150px; overflow-y: auto;">`;
-    let cloudHtml = `<ul style="margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.4; max-height: 150px; overflow-y: auto;">`;
-
-    allListIds.forEach(id => {
-        const lList = localLists.find(l => l.id === id);
-        const cList = cloudLists.find(l => l.id === id);
-
-        const lName = escapeHTML(lList ? lList.name : cList.name);
-        const cName = escapeHTML(cList ? cList.name : lList.name);
-
-        const lCount = lList ? lList.notes.length : 0;
-        const cCount = cList ? cList.notes.length : 0;
-
-        let lStyle = ''; let cStyle = '';
-        let lDiff = ''; let cDiff = '';
-
-        if (!lList) {
-            lStyle = 'color: var(--danger); opacity: 0.6; text-decoration: line-through;';
-            cStyle = 'color: var(--sync-success); font-weight: bold;';
-            lDiff = ' <span style="font-size: 9px;">(Manquante)</span>';
-            cDiff = ' <span style="font-size: 9px;">(Nouvelle)</span>';
-        } else if (!cList) {
-            lStyle = 'color: var(--sync-success); font-weight: bold;';
-            cStyle = 'color: var(--danger); opacity: 0.6; text-decoration: line-through;';
-            lDiff = ' <span style="font-size: 9px;">(Nouvelle)</span>';
-            cDiff = ' <span style="font-size: 9px;">(Manquante)</span>';
-        } else if (lCount > cCount) {
-            lStyle = 'color: var(--sync-success); font-weight: bold;';
-            cStyle = 'color: var(--danger);';
-            lDiff = ` <span style="font-size: 9px;">(+${lCount - cCount})</span>`;
-        } else if (cCount > lCount) {
-            lStyle = 'color: var(--danger);';
-            cStyle = 'color: var(--sync-success); font-weight: bold;';
-            cDiff = ` <span style="font-size: 9px;">(+${cCount - lCount})</span>`;
-        } else {
-            lStyle = 'color: var(--text-muted);';
-            cStyle = 'color: var(--text-muted);';
-        }
-
-        localHtml += `<li style="margin-bottom: 2px;"><span style="${lStyle}">${lName} : <b>${lCount}</b>${lDiff}</span></li>`;
-        cloudHtml += `<li style="margin-bottom: 2px;"><span style="${cStyle}">${cName} : <b>${cCount}</b>${cDiff}</span></li>`;
-    });
-
-    localHtml += `</ul>`;
-    cloudHtml += `</ul>`;
-
-    return [localHtml, cloudHtml];
-}
-
 function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudData) {
     currentCloudPayload = cloudData;
 
@@ -1001,10 +882,21 @@ function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudDa
         cloudDateEl.style.fontWeight = 'bold';
     }
     
-    const [localVolHtml, cloudVolHtml] = genererDiffVolume(appData.lists, cloudData.lists);
+    const générerHTMLVolumeDétaillé = (structureListes) => {
+        if (!structureListes || structureListes.length === 0) {
+            return '<span style="color: var(--text-muted); italic">Aucune liste</span>';
+        }
+        return `<ul style="margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.3; max-height: 150px; overflow-y: auto;">` +
+            structureListes.map(l => `
+                <li style="margin-bottom: 2px;">
+                    ${escapeHTML(l.name)} : <b>${l.notes ? l.notes.length : 0}</b>
+                </li>
+            `).join('') +
+            `</ul>`;
+    };
 
-    document.getElementById('conflict-local-volume').innerHTML = localVolHtml;
-    document.getElementById('conflict-cloud-volume').innerHTML = cloudVolHtml;
+    document.getElementById('conflict-local-volume').innerHTML = générerHTMLVolumeDétaillé(appData.lists);
+    document.getElementById('conflict-cloud-volume').innerHTML = générerHTMLVolumeDétaillé(cloudData.lists);
 
     document.getElementById('conflict-modal').style.display = 'flex';
 }
@@ -1033,107 +925,53 @@ async function resoudreConflitViaLocal() {
     await executerSyncCloudDirecte();
 }
 
-// Fonction de fusion V3.0.0+ (Last-Writer-Wins granulaire)
+// Fonction de fusion non-destructive v3.3.1
 async function resoudreConflitViaFusion() {
     if (!currentCloudPayload) return;
     
     const cloudData = currentCloudPayload;
-    const localData = appData;
-
-    // 1. Unification de la Corbeille (Pour repérer les éléments supprimés récemment - Tombstones)
-    const unifiedTrashMap = new Map();
-    [...localData.trash, ...(cloudData.trash || [])].forEach(item => {
-        if (!unifiedTrashMap.has(item.id) || item.lastModified > unifiedTrashMap.get(item.id).lastModified) {
-            unifiedTrashMap.set(item.id, item);
-        }
-    });
-
-    const mergedLists = [];
-    const allListIds = new Set([...localData.lists.map(l => l.id), ...cloudData.lists.map(l => l.id)]);
-
-    allListIds.forEach(listId => {
-        const localList = localData.lists.find(l => l.id === listId);
-        const cloudList = cloudData.lists.find(l => l.id === listId);
-        
-        let mergedList = null;
-
-        // Résolution de la liste (Nom, Propriétés)
-        if (localList && cloudList) {
-            mergedList = localList.lastModified >= cloudList.lastModified ? { ...localList } : { ...cloudList };
-            mergedList.notes = []; 
-        } else if (localList) {
-            mergedList = { ...localList, notes: [] };
-        } else if (cloudList) {
-            mergedList = { ...cloudList, notes: [] };
-        }
-
-        if (mergedList) {
-            const localNotes = localList ? localList.notes : [];
-            const cloudNotes = cloudList ? cloudList.notes : [];
-            const allNoteIds = new Set([...localNotes.map(n => n.id), ...cloudNotes.map(n => n.id)]);
-            const mergedNotes = [];
-
-            allNoteIds.forEach(noteId => {
-                const lNote = localNotes.find(n => n.id === noteId);
-                const cNote = cloudNotes.find(n => n.id === noteId);
-                
-                // On vérifie si la note existe dans notre corbeille unifiée
-                const trashItem = unifiedTrashMap.get(noteId);
-                
-                let winningNote = null;
-                if (lNote && cNote) {
-                    winningNote = lNote.lastModified >= cNote.lastModified ? { ...lNote } : { ...cNote };
-                } else if (lNote) {
-                    winningNote = { ...lNote };
-                } else if (cNote) {
-                    winningNote = { ...cNote };
-                }
-
-                // Vérification cruciale du "Tombstone" : La note a-t-elle été supprimée plus récemment que sa dernière modif ?
-                if (winningNote && trashItem && trashItem.deletedTs > winningNote.lastModified) {
-                    // On ne l'ajoute pas, elle reste dans la corbeille.
-                } else if (winningNote) {
-                    mergedNotes.push(winningNote);
-                    unifiedTrashMap.delete(noteId); // Elle vit, on la retire de la corbeille unifiée
-                }
-            });
-
-            // Ordre des notes : On s'appuie sur l'ordre de l'appareil qui a l'historique le plus récent pour la liste.
-            const orderSourceNotes = localList && cloudList 
-                ? (localList.lastModified >= cloudList.lastModified ? localNotes : cloudNotes)
-                : (localList ? localNotes : cloudNotes);
-            
-            mergedNotes.sort((a, b) => {
-                const indexA = orderSourceNotes.findIndex(n => n.id === a.id);
-                const indexB = orderSourceNotes.findIndex(n => n.id === b.id);
-                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                if (indexA !== -1) return -1;
-                if (indexB !== -1) return 1;
-                return b.lastModified - a.lastModified;
-            });
-
-            mergedList.notes = mergedNotes;
-            mergedLists.push(mergedList);
-        }
-    });
-
-    // Ordre des listes globales
-    const masterListOrder = localData.lastLocalChange >= cloudData.lastLocalChange 
-        ? localData.lists.map(l => l.id) 
-        : cloudData.lists.map(l => l.id);
     
-    mergedLists.sort((a, b) => {
-        const idxA = masterListOrder.indexOf(a.id);
-        const idxB = masterListOrder.indexOf(b.id);
-        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        if (idxA !== -1) return -1;
-        if (idxB !== -1) return 1;
-        return b.lastModified - a.lastModified;
+    // 1. Fusion des Listes et de leurs Notes
+    cloudData.lists.forEach(cloudList => {
+        const localList = appData.lists.find(l => l.id === cloudList.id);
+        
+        if (!localList) {
+            // La liste n'existe pas en local : on l'importe
+            appData.lists.push(cloudList);
+        } else {
+            // La liste existe, on fusionne les notes à l'intérieur
+            cloudList.notes.forEach(cloudNote => {
+                const localNote = localList.notes.find(n => n.id === cloudNote.id);
+                
+                if (!localNote) {
+                    // La note n'existe pas en local : on l'importe
+                    localList.notes.push(cloudNote);
+                } else {
+                    // La note existe, on vérifie si le texte a été modifié
+                    if (localNote.text !== cloudNote.text) {
+                        // Conflit : on conserve la version locale et on importe la version cloud
+                        // avec un nouvel ID et l'émoticône nuage à la fin pour identifier l'origine
+                        const mergedNote = {
+                            ...cloudNote,
+                            id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                            text: cloudNote.text + ' ☁️'
+                        };
+                        localList.notes.push(mergedNote);
+                    }
+                }
+            });
+        }
     });
 
-    appData.lists = mergedLists;
-    appData.trash = Array.from(unifiedTrashMap.values());
-    appData.trash.sort((a, b) => (b.deletedTs || 0) - (a.deletedTs || 0)); 
+    // 2. Fusion de la Corbeille (historique)
+    if (cloudData.trash && Array.isArray(cloudData.trash)) {
+        cloudData.trash.forEach(cloudTrashItem => {
+            const existsLocally = appData.trash.some(t => t.id === cloudTrashItem.id);
+            if (!existsLocally) {
+                appData.trash.push(cloudTrashItem);
+            }
+        });
+    }
 
     fermerModaleConflit();
     updateCloudStatus("⏳ Fusion en cours...", "warning");
@@ -1143,6 +981,7 @@ async function resoudreConflitViaFusion() {
     applyThemeEngine();
     renderAll();
     
+    // Déclenchement immédiat de l'envoi de la version fusionnée parfaite au Cloud
     await executerSyncCloudDirecte();
     updateCloudStatus("☁️ Fusionné et à jour", "success");
 }
