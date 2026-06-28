@@ -1,11 +1,11 @@
 /**
  * Juul_Listes-Compactes
- * Version: 4.0.0
+ * Version: 4.1.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 "use strict";
 
-const APP_VERSION = '4.0.0';
+const APP_VERSION = '4.1.0';
 
 // --- Sélecteurs DOM Centralisés ---
 const DOM = {
@@ -13,6 +13,7 @@ const DOM = {
     inputListName: document.getElementById('input-list-name'),
     inputSearch: document.getElementById('input-search'),
     btnClearSearch: document.getElementById('btn-clear-search'),
+    btnFilterFocus: document.getElementById('btn-filter-focus'),
     btnToggleAll: document.getElementById('btn-toggle-all'),
     btnTogglePanel: document.getElementById('btn-toggle-panel'),
     listsContainer: document.getElementById('lists-container'),
@@ -66,6 +67,7 @@ let appData = {
 };
 
 let searchQuery = '';
+let isFocusFilterActive = false;
 let activeSortableInstances = [];
 let cloudSyncTimer = null;
 let currentCloudPayload = null;
@@ -100,11 +102,13 @@ function initData() {
                 l.notes.forEach(n => {
                     if (!n.id) n.id = 'note_' + Math.random().toString(36).substr(2, 9);
                     if (!n.lastModified) n.lastModified = Date.now();
+                    if (n.focusDate === undefined) n.focusDate = null;
                 });
             });
             appData.trash.forEach(t => {
                 if (!t.lastModified) t.lastModified = Date.now();
                 if (!t.deletedTs) t.deletedTs = Date.now();
+                if (t.focusDate === undefined) t.focusDate = null;
             });
         } catch (e) {
             resetToDefault();
@@ -112,6 +116,8 @@ function initData() {
     } else {
         resetToDefault();
     }
+
+    cleanExpiredFocus();
 
     if (DOM.panel) {
         if (appData.panelCollapsed) DOM.panel.classList.add('hidden');
@@ -123,7 +129,7 @@ function initServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('PWA : Service Worker enregistré ! V4.0.0', reg.scope))
+                .then(reg => console.log('PWA : Service Worker enregistré ! V4.1.0', reg.scope))
                 .catch(err => console.error('PWA : Échec SW :', err));
         });
     }
@@ -134,12 +140,42 @@ function resetToDefault() {
     const now = Date.now();
     appData = {
         lists: [
-            { id: 'l1', name: 'À faire', collapsed: false, lastModified: now, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()), lastModified: now }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()), lastModified: now }] },
+            { id: 'l1', name: 'À faire', collapsed: false, lastModified: now, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()), lastModified: now, focusDate: null }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()), lastModified: now, focusDate: null }] },
             { id: 'l2', name: 'En cours', collapsed: false, lastModified: now, notes: [] }
         ],
         trash: [], trashCollapsed: true, panelCollapsed: true, themeMode: 'auto',
         lastExport: null, lastImport: null, lastLocalChange: now, lastCloudSync: null, lastDevice: null
     };
+}
+
+function getTodayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function cleanExpiredFocus() {
+    const today = getTodayStr();
+    let hasChanges = false;
+    
+    appData.lists.forEach(list => {
+        list.notes.forEach(note => {
+            if (note.focusDate && note.focusDate !== today) {
+                note.focusDate = null;
+                note.lastModified = Date.now();
+                hasChanges = true;
+            }
+        });
+    });
+
+    appData.trash.forEach(note => {
+        if (note.focusDate && note.focusDate !== today) {
+            note.focusDate = null;
+            note.lastModified = Date.now();
+            hasChanges = true;
+        }
+    });
+
+    if (hasChanges) saveToBrowser();
 }
 
 function saveToBrowser() {
@@ -211,11 +247,36 @@ function genererDiffVolume(localLists, cloudLists) {
     return [localHtml + `</ul>`, cloudHtml + `</ul>`];
 }
 
-// --- Interface Globale (AppActions) pour appel depuis le HTML généré ---
+// --- Interface Globale (AppActions) ---
 window.AppActions = {
     toggleTheme: () => {
         appData.themeMode = appData.themeMode === 'auto' ? 'light' : appData.themeMode === 'light' ? 'dark' : 'auto';
         saveToBrowser(); applyThemeEngine();
+    },
+    toggleFocusFilter: () => {
+        isFocusFilterActive = !isFocusFilterActive;
+        if (isFocusFilterActive) {
+            DOM.btnFilterFocus.classList.add('active-filter');
+        } else {
+            DOM.btnFilterFocus.classList.remove('active-filter');
+        }
+        renderAll();
+    },
+    toggleNoteFocus: (listId, noteId) => {
+        const listData = appData.lists.find(l => l.id === listId);
+        if (!listData) return;
+        const noteData = listData.notes.find(n => n.id === noteId);
+        if (!noteData) return;
+
+        const today = getTodayStr();
+        if (noteData.focusDate === today) {
+            noteData.focusDate = null;
+        } else {
+            noteData.focusDate = today;
+        }
+        noteData.lastModified = Date.now();
+        listData.lastModified = Date.now();
+        saveToBrowser(); renderAll();
     },
     toggleAllLists: () => {
         const anyExpanded = appData.lists.some(l => !l.collapsed);
@@ -282,7 +343,7 @@ window.AppActions = {
         const listData = appData.lists.find(l => l.id === listId);
         if (listData) {
             const parsed = getNoteDisplay(text);
-            const newNoteObj = { id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), text: text, createdStr: formatDate(new Date()), lastModified: Date.now() };
+            const newNoteObj = { id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), text: text, createdStr: formatDate(new Date()), lastModified: Date.now(), focusDate: null };
             if (parsed.isPriority) listData.notes.unshift(newNoteObj); else listData.notes.push(newNoteObj);
             listData.lastModified = Date.now(); saveToBrowser();
         }
@@ -307,7 +368,8 @@ window.AppActions = {
         if (targetList) {
             const parsed = getNoteDisplay(note.text);
             note.lastModified = Date.now(); delete note.deletedTs; 
-            const newObj = { id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified };
+            if (note.focusDate && note.focusDate !== getTodayStr()) note.focusDate = null;
+            const newObj = { id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified, focusDate: note.focusDate };
             if (parsed.isPriority) targetList.notes.unshift(newObj); else targetList.notes.push(newObj);
             targetList.lastModified = Date.now();
         } else {
@@ -429,12 +491,18 @@ function renderAll() {
     activeSortableInstances.forEach(instance => { if (instance && instance.destroy) instance.destroy(); });
     activeSortableInstances = [];
 
+    const today = getTodayStr();
+
     DOM.listsContainer.innerHTML = '';
     appData.lists.forEach((list) => {
         const matchesListTitle = list.name.toLowerCase().includes(searchQuery);
-        const filteredNotes = list.notes.filter(note => note.text.toLowerCase().includes(searchQuery) || matchesListTitle);
+        let filteredNotes = list.notes.filter(note => note.text.toLowerCase().includes(searchQuery) || matchesListTitle);
 
-        if (searchQuery !== '' && !matchesListTitle && filteredNotes.length === 0) return;
+        if (isFocusFilterActive) {
+            filteredNotes = filteredNotes.filter(note => note.focusDate === today);
+        }
+
+        if ((searchQuery !== '' || isFocusFilterActive) && !matchesListTitle && filteredNotes.length === 0) return;
 
         const listBlock = document.createElement('div');
         listBlock.className = 'list-block';
@@ -455,21 +523,27 @@ function renderAll() {
                 </div>
             </div>
             <div class="list-content ${list.collapsed ? 'collapsed' : ''}">
-                <form onsubmit="AppActions.addNote(event, '${list.id}')" class="input-group">
+                <form onsubmit="AppActions.addNote(event, '${list.id}')" class="input-group ${isFocusFilterActive ? 'hidden' : ''}">
                     <textarea placeholder="Ajouter... (! = urgent, ? = incertain)" required autocomplete="off" rows="1" onkeydown="AppActions.handleNoteSubmitKey(event)" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"></textarea>
                     <button type="submit">+</button>
                 </form>
                 <ul class="notes-dropzone" data-list-id="${list.id}">
                     ${filteredNotes.map((note) => {
                         const parsed = getNoteDisplay(note.text);
+                        const isFocus = note.focusDate === today;
                         let noteClass = parsed.isPriority ? 'priority-high' : parsed.isQuestion ? 'note-question' : '';
+                        if (isFocus) noteClass += ' note-focus-active';
+
+                        const btnFocusStyle = isFocus ? 'opacity: 1; filter: grayscale(0%);' : 'opacity: 0.4; filter: grayscale(100%);';
+
                         return `
                             <li class="note-item ${noteClass}" data-id="${note.id}">
                                 <div class="note-main" ondblclick="AppActions.enableNoteEdit(event, '${list.id}', '${note.id}')">
                                     <span class="note-text-span">${escapeHTML(parsed.cleanText)}</span>
                                     <span class="note-date">le ${note.createdStr || 'N/A'}</span>
                                 </div>
-                                <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="display:flex; align-items:center; gap:4px;">
+                                    <button class="btn-icon-muted" style="${btnFocusStyle}" onclick="AppActions.toggleNoteFocus('${list.id}', '${note.id}')" title="Focus pour la journée">🎯</button>
                                     <button class="btn-icon-muted" onclick="AppActions.moveToTrash('${list.id}', '${note.id}')" title="Supprimer">✕</button>
                                 </div>
                             </li>
@@ -484,7 +558,7 @@ function renderAll() {
     const filteredTrash = appData.trash.map((note, originalIndex) => ({ ...note, originalIndex })).filter(note => searchQuery === '' || note.text.toLowerCase().includes(searchQuery));
 
     DOM.trashContainer.innerHTML = `
-        <div class="list-block trash-block">
+        <div class="list-block trash-block ${isFocusFilterActive ? 'hidden' : ''}">
             <div class="list-header trash-header">
                 <div class="list-title-zone trash-header-cursor">
                     <span>🗑️ Historique (${appData.trash.length})</span>
@@ -518,7 +592,7 @@ function renderAll() {
         </div>
     `;
 
-    if (searchQuery === '') initSortableEngine();
+    if (searchQuery === '' && !isFocusFilterActive) initSortableEngine();
 }
 
 function initSortableEngine() {
@@ -570,7 +644,9 @@ function initSortableEngine() {
 function initEventListeners() {
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-            console.log("V4.0.0 : Retour au premier plan, synchro auto...");
+            console.log("V4.1.0 : Retour au premier plan, synchro auto...");
+            cleanExpiredFocus();
+            renderAll();
             initialiserSynchroCloud();
         }
     });
@@ -602,6 +678,7 @@ function initEventListeners() {
     });
 
     DOM.btnClearSearch.addEventListener('click', AppActions.clearSearch);
+    DOM.btnFilterFocus.addEventListener('click', AppActions.toggleFocusFilter);
     DOM.btnToggleAll.addEventListener('click', AppActions.toggleAllLists);
     DOM.btnTogglePanel.addEventListener('click', AppActions.toggleControlPanel);
     DOM.btnTheme.addEventListener('click', AppActions.toggleTheme);
