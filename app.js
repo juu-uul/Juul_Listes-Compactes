@@ -1,20 +1,51 @@
 /**
  * Juul_Listes-Compactes
- * Version: 3.2.0
- * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
+ * Version: 3.3.0
+ * Description: Application PWA avec Sync-on-Focus et surveillance de batterie optimisée.
  */
 
-const APP_VERSION = '3.2.0';
+const APP_VERSION = '3.3.0';
+let syncReminderInterval = null;
+let lastSyncTimestamp = Date.now();
 
-// Sync-on-Focus : Déclenchement automatique lors du retour sur l'app
+// --- Logique Sync-on-Focus et Monitoring Batterie Optimisé ---
+function startSyncMonitoring() {
+    if (syncReminderInterval) return; // Déjà actif
+    
+    syncReminderInterval = setInterval(() => {
+        const minutesSinceLastSync = (Date.now() - lastSyncTimestamp) / 60000;
+        const btn = document.getElementById('btn-sync');
+        
+        // Si plus de 30 min sans synchro, on active le rappel visuel
+        if (minutesSinceLastSync > 30 && btn) {
+            btn.classList.add('sync-warning');
+        }
+    }, 60000); // Vérifie chaque minute
+}
+
+function stopSyncMonitoring() {
+    clearInterval(syncReminderInterval);
+    syncReminderInterval = null;
+}
+
+// Écouteur de cycle de vie
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        console.log("V3.2.0 : Retour au premier plan, synchro auto...");
-        if (typeof lancerSynchroManuel === 'function') {
-            lancerSynchroManuel();
-        }
+        console.log("V3.3.0 : App active. Synchro immédiate et monitoring démarré.");
+        lancerSynchroManuel(); // Synchro au retour
+        startSyncMonitoring(); // Monitoring actif
+    } else {
+        console.log("V3.3.0 : App cachée. Monitoring arrêté pour économie d'énergie.");
+        stopSyncMonitoring(); // On coupe tout en background
     }
 });
+
+// Appeler cette fonction dans ton code de succès de synchro existant
+function onSyncSuccess() {
+    lastSyncTimestamp = Date.now();
+    const btn = document.getElementById('btn-sync');
+    if (btn) btn.classList.remove('sync-warning');
+}
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
