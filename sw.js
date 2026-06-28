@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW : Mise en cache des ressources de base V3.3.1');
+      console.log('SW : Déploiement et mise en cache des actifs V3.3.1');
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );
@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log('SW : Nettoyage de l\'ancien cache', cache);
+            console.log('SW : Purge de la mémoire de cache obsolète :', cache);
             return caches.delete(cache);
           }
         })
@@ -34,9 +34,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Sécurité Synchro : Ne pas intercepter ni mettre en cache les requêtes vers l'API Google Apps Script
+  // Filtrage de sécurité : Ne pas intercepter les requêtes vers Google Apps Script
   if (event.request.url.includes('script.google.com')) {
-    return; // Laisse le navigateur gérer la requête réseau normalement
+    return;
   }
 
   event.respondWith(
@@ -52,27 +52,10 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // Échec silencieux du réseau en arrière-plan (ex: mode hors ligne)
+          // Captures des erreurs réseau silencieuses (Usage offline)
         });
 
-      // Stratégie Stale-While-Revalidate :
-      // Si la ressource est présente en cache, on la sert immédiatement.
-      // Le réseau mettra à jour le cache en arrière-plan pour la prochaine visite.
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      // Si la ressource n'est pas en cache, on attend la réponse du réseau.
-      return fetchPromise.then((networkResponse) => {
-        if (networkResponse) return networkResponse;
-
-        // Si le réseau échoue et qu'aucune ressource n'est en cache, réponse de secours 503.
-        return new Response('Connexion Internet requise pour cette ressource.', {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
-        });
-      });
+      return cachedResponse || fetchPromise;
     })
   );
 });
