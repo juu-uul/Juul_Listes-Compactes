@@ -374,6 +374,18 @@
         }
 
         button { cursor: pointer; }
+
+		.sync-warning {
+        	animation: pulse 2s infinite;
+        	border: 2px solid var(--sync-warning) !important;
+        	background-color: rgba(245, 158, 11, 0.1) !important;
+    	}
+
+    	@keyframes pulse {
+        	0% { transform: scale(1); }
+        	50% { transform: scale(1.05); }
+        	100% { transform: scale(1); }
+    	}
     </style>
 </head>
 <body>
