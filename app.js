@@ -534,7 +534,7 @@ function renderAll() {
                         let noteClass = parsed.isPriority ? 'priority-high' : parsed.isQuestion ? 'note-question' : '';
                         if (isFocus) noteClass += ' note-focus-active';
 
-                        const btnFocusStyle = isFocus ? 'opacity: 1; filter: grayscale(0%);' : 'opacity: 0.4; filter: grayscale(100%);';
+                        const btnFocusStyle = isFocus ? 'opacity: 1; filter: grayscale(0%);' : 'opacity: 0.2; filter: grayscale(100%);';
 
                         return `
                             <li class="note-item ${noteClass}" data-id="${note.id}">
