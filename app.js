@@ -1,7 +1,7 @@
 /**
  * Juul_Listes-Compactes
- * Version: 3.1.0
- * Description: Application PWA pour la gestion de listes, synchronisation cloud, et résolution de conflits par horodatage (Last-Writer-Wins).
+ * Version: 3.2.0
+ * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 
 const APP_VERSION = '3.2.0';
