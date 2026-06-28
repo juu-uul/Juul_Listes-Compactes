@@ -23,10 +23,10 @@
             --question-border: #fde68a;
             --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
-            /* Indicateurs Cloud v3.3.1 */
-            --sync-success: #198754;
-            --sync-warning: #f59e0b;
-            --sync-danger: #dc3545;
+            /* Indicateurs Cloud v3.2.0 */
+        	--sync-success: #198754;
+        	--sync-warning: #f59e0b;
+        	--sync-danger: #dc3545;
         }
         .dark-theme {
             --bg: #121212;
@@ -44,10 +44,10 @@
             --question-border: #3d301a;
             --question-text: #cca43b;
             --shadow: rgba(0, 0, 0, 0.4);
-            /* Indicateurs Cloud v3.3.1 Dark */
-            --sync-success: #4ade80;
-            --sync-warning: #fbbf24;
-            --sync-danger: #f87171;
+            /* Indicateurs Cloud v3.2.0 Dark */
+        	--sync-success: #4ade80;
+        	--sync-warning: #fbbf24;
+        	--sync-danger: #f87171;
         }
         
         body {
@@ -339,7 +339,7 @@
             cursor: pointer;
         }
 
-        /* Système v3.3.1+ : Remplissage complet et gestion du contraste de lisibilité */
+        /* Système v3.1.0+ : Remplissage complet et gestion du contraste de lisibilité */
         .bubble-success { 
             background-color: var(--sync-success) !important; 
             border-color: var(--sync-success) !important; 
@@ -422,10 +422,6 @@
                     <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
                     <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Délai d'inactivité avant envoi (en secondes) :</label>
                     <input type="number" id="input-cloud-debounce" min="1" max="300" placeholder="10" autocomplete="off">
-                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Intervalle avant alerte de sauvegarde (en jours) :</label>
-                    <input type="number" id="input-backup-interval" min="1" max="365" placeholder="7" autocomplete="off">
-					<label for="input-sync-interval">Rappel synchro (en minutes) :</label>
-    				<input type="number" id="input-sync-interval" min="1" max="1440" value="30" style="width: 60px;">
                 </div>
             </div>
         </div>
@@ -436,7 +432,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 3.3.1</div>
+            <div class="app-version">Version 3.2.0</div>
         </footer>
 
     </div>
@@ -476,22 +472,24 @@
                     </tr>
                     <tr>
                         <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Volume</td>
-                        <td id="conflict-local-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
-                        <td id="conflict-cloud-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-local-volume" style="padding: 6px 4px; vertical-align: top; width: 40%;">-</td>
+                        <td id="conflict-cloud-volume" style="padding: 6px 4px; vertical-align: top; width: 40%;">-</td>
                     </tr>
                 </tbody>
             </table>
 
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button id="btn-resolve-merge" style="background: #0dcaf0; color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                    🔵 Fusionner les deux versions (Recommandé / Sans perte)
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button id="btn-resolve-merge" style="background: #0dcaf0; color: #000; border: 2px solid #0aa2c0; padding: 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 6px var(--shadow);">
+                    🔵 Fusionner (Recommandé / Sans perte)
                 </button>
-                <button id="btn-resolve-accept-cloud" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                    🟢 Télécharger la version Cloud (Écrase cet appareil)
-                </button>
-                <button id="btn-resolve-force-local" style="background: none; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                    🟠 Écraser le Cloud avec ma version Locale
-                </button>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button id="btn-resolve-accept-cloud" style="flex: 1; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 4px; font-weight: normal; cursor: pointer; font-size: 11px; opacity: 0.9;">
+                        🟢 Cloud (Écrase Local)
+                    </button>
+                    <button id="btn-resolve-force-local" style="flex: 1; background: none; color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 4px; font-weight: normal; cursor: pointer; font-size: 11px; opacity: 0.9;">
+                        🟠 Local (Écrase Cloud)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
