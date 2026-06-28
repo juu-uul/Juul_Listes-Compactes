@@ -23,7 +23,7 @@
             --question-border: #fde68a;
             --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
-            /* Indicateurs Cloud v3.0.0 */
+            /* Indicateurs Cloud v3.1.0 */
             --sync-success: #198754;
             --sync-warning: #f59e0b;
             --sync-danger: #dc3545;
@@ -44,7 +44,7 @@
             --question-border: #3d301a;
             --question-text: #cca43b;
             --shadow: rgba(0, 0, 0, 0.4);
-            /* Indicateurs Cloud v3.0.0 Dark */
+            /* Indicateurs Cloud v3.1.0 Dark */
             --sync-success: #4ade80;
             --sync-warning: #fbbf24;
             --sync-danger: #f87171;
@@ -339,7 +339,7 @@
             cursor: pointer;
         }
 
-        /* Système v3.0.0+ : Remplissage complet et gestion du contraste de lisibilité */
+        /* Système v3.1.0+ : Remplissage complet et gestion du contraste de lisibilité */
         .bubble-success { 
             background-color: var(--sync-success) !important; 
             border-color: var(--sync-success) !important; 
@@ -432,7 +432,7 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 3.0.0</div>
+            <div class="app-version">Version 3.1.0</div>
         </footer>
 
     </div>
@@ -472,22 +472,24 @@
                     </tr>
                     <tr>
                         <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Volume</td>
-                        <td id="conflict-local-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
-                        <td id="conflict-cloud-volume" style="padding: 6px 4px; vertical-align: top;">-</td>
+                        <td id="conflict-local-volume" style="padding: 6px 4px; vertical-align: top; width: 40%;">-</td>
+                        <td id="conflict-cloud-volume" style="padding: 6px 4px; vertical-align: top; width: 40%;">-</td>
                     </tr>
                 </tbody>
             </table>
 
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button id="btn-resolve-merge" style="background: #0dcaf0; color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button id="btn-resolve-merge" style="background: #0dcaf0; color: #000; border: 2px solid #0aa2c0; padding: 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 6px var(--shadow);">
                     🔵 Fusionner les deux versions (Recommandé / Sans perte)
                 </button>
-                <button id="btn-resolve-accept-cloud" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                    🟢 Télécharger la version Cloud (Écrase cet appareil)
-                </button>
-                <button id="btn-resolve-force-local" style="background: none; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                    🟠 Écraser le Cloud avec ma version Locale
-                </button>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button id="btn-resolve-accept-cloud" style="flex: 1; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 4px; font-weight: normal; cursor: pointer; font-size: 11px; opacity: 0.9;">
+                        🟢 Cloud (Écrase Local)
+                    </button>
+                    <button id="btn-resolve-force-local" style="flex: 1; background: none; color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 4px; font-weight: normal; cursor: pointer; font-size: 11px; opacity: 0.9;">
+                        🟠 Local (Écrase Cloud)
+                    </button>
+                </div>
             </div>
         </div>
     </div>

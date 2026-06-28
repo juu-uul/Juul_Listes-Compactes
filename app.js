@@ -1,10 +1,10 @@
 /**
  * Juul_Listes-Compactes
- * Version: 3.0.0
+ * Version: 3.1.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et résolution de conflits par horodatage (Last-Writer-Wins).
  */
 
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.1.0';
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -65,7 +65,7 @@ function init() {
             if (appData.lastCloudSync === undefined) appData.lastCloudSync = null;
             if (appData.lastDevice === undefined) appData.lastDevice = null;
             
-            // Migration silencieuse V3.0.0 : Ajout des timestamps
+            // Migration silencieuse V3.0.0+ : Ajout des timestamps
             appData.lists.forEach(l => {
                 if (!l.id) l.id = 'list_' + Math.random().toString(36).substr(2, 9);
                 if (!l.lastModified) l.lastModified = Date.now();
@@ -883,6 +883,63 @@ async function executerSyncCloudDirecte() {
     }
 }
 
+// Fonction utilitaire pour générer le visuel comparatif des volumes V3.1.0
+function genererDiffVolume(localLists, cloudLists) {
+    if ((!localLists || localLists.length === 0) && (!cloudLists || cloudLists.length === 0)) {
+        return ['<span style="color: var(--text-muted); font-style: italic;">Aucune liste</span>', '<span style="color: var(--text-muted); font-style: italic;">Aucune liste</span>'];
+    }
+
+    const allListIds = Array.from(new Set([...(localLists||[]).map(l=>l.id), ...(cloudLists||[]).map(l=>l.id)]));
+    
+    let localHtml = `<ul style="margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.4; max-height: 150px; overflow-y: auto;">`;
+    let cloudHtml = `<ul style="margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.4; max-height: 150px; overflow-y: auto;">`;
+
+    allListIds.forEach(id => {
+        const lList = localLists.find(l => l.id === id);
+        const cList = cloudLists.find(l => l.id === id);
+
+        const lName = escapeHTML(lList ? lList.name : cList.name);
+        const cName = escapeHTML(cList ? cList.name : lList.name);
+
+        const lCount = lList ? lList.notes.length : 0;
+        const cCount = cList ? cList.notes.length : 0;
+
+        let lStyle = ''; let cStyle = '';
+        let lDiff = ''; let cDiff = '';
+
+        if (!lList) {
+            lStyle = 'color: var(--danger); opacity: 0.6; text-decoration: line-through;';
+            cStyle = 'color: var(--sync-success); font-weight: bold;';
+            lDiff = ' <span style="font-size: 9px;">(Manquante)</span>';
+            cDiff = ' <span style="font-size: 9px;">(Nouvelle)</span>';
+        } else if (!cList) {
+            lStyle = 'color: var(--sync-success); font-weight: bold;';
+            cStyle = 'color: var(--danger); opacity: 0.6; text-decoration: line-through;';
+            lDiff = ' <span style="font-size: 9px;">(Nouvelle)</span>';
+            cDiff = ' <span style="font-size: 9px;">(Manquante)</span>';
+        } else if (lCount > cCount) {
+            lStyle = 'color: var(--sync-success); font-weight: bold;';
+            cStyle = 'color: var(--danger);';
+            lDiff = ` <span style="font-size: 9px;">(+${lCount - cCount})</span>`;
+        } else if (cCount > lCount) {
+            lStyle = 'color: var(--danger);';
+            cStyle = 'color: var(--sync-success); font-weight: bold;';
+            cDiff = ` <span style="font-size: 9px;">(+${cCount - lCount})</span>`;
+        } else {
+            lStyle = 'color: var(--text-muted);';
+            cStyle = 'color: var(--text-muted);';
+        }
+
+        localHtml += `<li style="margin-bottom: 2px;"><span style="${lStyle}">${lName} : <b>${lCount}</b>${lDiff}</span></li>`;
+        cloudHtml += `<li style="margin-bottom: 2px;"><span style="${cStyle}">${cName} : <b>${cCount}</b>${cDiff}</span></li>`;
+    });
+
+    localHtml += `</ul>`;
+    cloudHtml += `</ul>`;
+
+    return [localHtml, cloudHtml];
+}
+
 function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudData) {
     currentCloudPayload = cloudData;
 
@@ -903,21 +960,10 @@ function ouvrirModaleConflit(localDevice, localTs, cloudDevice, cloudTs, cloudDa
         cloudDateEl.style.fontWeight = 'bold';
     }
     
-    const générerHTMLVolumeDétaillé = (structureListes) => {
-        if (!structureListes || structureListes.length === 0) {
-            return '<span style="color: var(--text-muted); italic">Aucune liste</span>';
-        }
-        return `<ul style="margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.3; max-height: 150px; overflow-y: auto;">` +
-            structureListes.map(l => `
-                <li style="margin-bottom: 2px;">
-                    ${escapeHTML(l.name)} : <b>${l.notes ? l.notes.length : 0}</b>
-                </li>
-            `).join('') +
-            `</ul>`;
-    };
+    const [localVolHtml, cloudVolHtml] = genererDiffVolume(appData.lists, cloudData.lists);
 
-    document.getElementById('conflict-local-volume').innerHTML = générerHTMLVolumeDétaillé(appData.lists);
-    document.getElementById('conflict-cloud-volume').innerHTML = générerHTMLVolumeDétaillé(cloudData.lists);
+    document.getElementById('conflict-local-volume').innerHTML = localVolHtml;
+    document.getElementById('conflict-cloud-volume').innerHTML = cloudVolHtml;
 
     document.getElementById('conflict-modal').style.display = 'flex';
 }
@@ -946,7 +992,7 @@ async function resoudreConflitViaLocal() {
     await executerSyncCloudDirecte();
 }
 
-// Fonction de fusion V3.0.0 (Last-Writer-Wins granulaire)
+// Fonction de fusion V3.0.0+ (Last-Writer-Wins granulaire)
 async function resoudreConflitViaFusion() {
     if (!currentCloudPayload) return;
     
