@@ -16,8 +16,8 @@ function startSyncMonitoring() {
         const minutesSinceLastSync = (Date.now() - lastSyncTimestamp) / 60000;
         const btn = document.getElementById('btn-sync');
         
-        // Si plus de 30 min sans synchro, on active le rappel visuel
-        if (minutesSinceLastSync > 30 && btn) {
+        // Si plus de 5 min sans synchro, on active le rappel visuel
+        if (minutesSinceLastSync > 5 && btn) {
             btn.classList.add('sync-warning');
         }
     }, 60000); // Vérifie chaque minute
