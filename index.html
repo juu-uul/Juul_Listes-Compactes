@@ -23,7 +23,6 @@
             --question-border: #fde68a;
             --question-text: #92400e;
             --shadow: rgba(0, 0, 0, 0.05);
-            /* Indicateurs Cloud v3.2.0 */
         	--sync-success: #198754;
         	--sync-warning: #f59e0b;
         	--sync-danger: #dc3545;
@@ -44,344 +43,140 @@
             --question-border: #3d301a;
             --question-text: #cca43b;
             --shadow: rgba(0, 0, 0, 0.4);
-            /* Indicateurs Cloud v3.2.0 Dark */
         	--sync-success: #4ade80;
         	--sync-warning: #fbbf24;
         	--sync-danger: #f87171;
         }
         
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-        }
-        
-        .app-container {
-            width: 100%;
-            max-width: 650px;
-            min-height: 100vh;
-            background-color: var(--app-bg);
-            box-shadow: 0 0 15px var(--shadow);
-            box-sizing: border-box;
-            padding: 8px 8px 12px 8px;
-            display: flex;
-            flex-direction: column;
-        }
-        
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 650px; min-height: 100vh; background-color: var(--app-bg); box-shadow: 0 0 15px var(--shadow); box-sizing: border-box; padding: 8px 8px 12px 8px; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
         
-        .search-bar-container {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .search-input-wrapper {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
-            min-width: 140px;
-        }
-        .search-input-wrapper input {
-            width: 100%;
-            padding: 8px 26px 8px 8px; /* Augmentation hauteur */
-            border: 1px solid var(--border);
-            border-radius: 3px;
-            background: var(--surface);
-            color: var(--text);
-            box-sizing: border-box;
-        }
-        .btn-action-header {
-            padding: 8px 16px; /* Augmentation hauteur (Menu et Toggle All) */
-            border: 1px solid var(--border);
-            border-radius: 3px;
-            background: var(--surface);
-            color: var(--text);
-            font-size: 14px;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
+        /* Layout & Header */
+        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+        .app-header-title { margin: 0; font-weight: bold; color: var(--text); letter-spacing: -0.3px; }
+        
+        /* Search Bar & Actions */
+        .search-bar-container { display: flex; gap: 4px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+        .search-input-wrapper { position: relative; flex-grow: 1; display: flex; min-width: 140px; }
+        .search-input-wrapper input { width: 100%; padding: 8px 26px 8px 8px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); box-sizing: border-box; }
+        .btn-clear-search { position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 12px; z-index: 5; cursor: pointer; }
+        .btn-action-header { padding: 8px 16px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); font-size: 14px; white-space: nowrap; display: flex; align-items: center; justify-content: center; cursor: pointer; box-sizing: border-box; }
 
-        .list-block {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            margin-bottom: 8px; 
-            padding: 6px 8px;   
-        }
-        .list-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            margin-bottom: 4px; 
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 3px;
-        }
-        .list-title-zone {
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-            min-width: 0;
-            padding-right: 8px;
-        }
-        .list-title-text {
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-            min-width: 0;
-        }
-        .list-name-truncate {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .list-count {
-            white-space: nowrap;
-        }
-        .list-actions-zone {
-            display: flex;
-            align-items: center;
-            gap: 4px; /* Ajusté pour les nouveaux paddings */
-            flex-shrink: 0;
-        }
+        /* Lists & Items */
+        .list-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; padding: 6px 8px; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid var(--border); padding-bottom: 3px; }
+        .list-title-zone { display: flex; align-items: center; flex-grow: 1; min-width: 0; padding-right: 8px; }
+        .list-title-text { display: flex; align-items: center; flex-grow: 1; min-width: 0; }
+        .list-name-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-count { white-space: nowrap; }
+        .list-actions-zone { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
         
-        .notes-dropzone {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            min-height: 20px;
-        }
+        .notes-dropzone { list-style: none; padding: 0; margin: 0; min-height: 20px; }
+        .note-item { display: flex; justify-content: space-between; align-items: center; background: var(--app-bg); border: 1px solid var(--border); padding: 4px 6px; margin-bottom: 3px; border-radius: 3px; color: var(--text); }
+        .priority-high { background-color: var(--priority-bg) !important; border-color: var(--priority-border) !important; color: var(--priority-text) !important; }
+        .note-question { background-color: var(--question-bg) !important; border-color: var(--question-border) !important; color: var(--question-text) !important; }
+        .note-main { display: flex; flex-direction: column; flex-grow: 1; cursor: pointer; }
+        .note-text-span, .note-main span { white-space: pre-wrap; word-break: break-word; }
+        .note-date { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
         
-        .note-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--app-bg);
-            border: 1px solid var(--border);
-            padding: 4px 6px; 
-            margin-bottom: 3px; 
-            border-radius: 3px;
-            color: var(--text);
-        }
+        /* Inputs & Buttons */
+        .input-group { display: flex; margin-bottom: 4px; align-items: stretch; }
+        .input-group textarea, .input-group input { flex-grow: 1; padding: 8px; border: 1px solid var(--border); border-radius: 3px 0 0 3px; background: var(--surface); color: var(--text); box-sizing: border-box; }
+        .input-group textarea { font-family: inherit; font-size: 13px; resize: none; overflow-y: hidden; height: auto; }
+        .input-group button { padding: 8px 20px; border: 1px solid var(--border); border-left: none; border-radius: 0 3px 3px 0; background: var(--primary); color: #ffffff; font-weight: bold; cursor: pointer; box-sizing: border-box; }
         
-        .priority-high {
-            background-color: var(--priority-bg) !important;
-            border-color: var(--priority-border) !important;
-            color: var(--priority-text) !important;
-        }
-
-        .note-question {
-            background-color: var(--question-bg) !important;
-            border-color: var(--question-border) !important;
-            color: var(--question-text) !important;
-        }
-        
-        .note-main {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            cursor: pointer;
-        }
-        
-        .note-text-span, .note-main span {
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        
-        .note-date {
-            font-size: 9px; 
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-        
-        .input-group {
-            display: flex;
-            margin-bottom: 4px; 
-            align-items: stretch;
-        }
-        
-        .input-group textarea {
-            flex-grow: 1;
-            padding: 8px 8px; /* Augmentation hauteur */
-            border: 1px solid var(--border);
-            border-radius: 3px 0 0 3px;
-            background: var(--surface);
-            color: var(--text);
-            font-family: inherit;
-            font-size: 13px;
-            resize: none;
-            overflow-y: hidden;
-            box-sizing: border-box;
-            height: auto;
-        }
-        
-        .input-group input {
-            flex-grow: 1;
-            padding: 8px 8px; /* Augmentation hauteur pour correspondre */
-            border: 1px solid var(--border);
-            border-radius: 3px 0 0 3px;
-            background: var(--surface);
-            color: var(--text);
-            box-sizing: border-box;
-        }
-        .input-group button {
-            padding: 8px 20px; /* Augmentation hauteur bouton d'ajout */
-            border: 1px solid var(--border);
-            border-left: none;
-            border-radius: 0 3px 3px 0;
-            background: var(--primary);
-            color: #ffffff;
-            font-weight: bold;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-        
+        /* Drag & Drop */
         .collapsed { display: none !important; }
         .ghost-list { opacity: 0.4; background: #cbd5e1; }
         .ghost-note { opacity: 0.5; background: #94a3b8; }
+        .list-drag-handle { color: #adb5bd; font-size: 14px; margin-right: 4px; padding: 6px 10px; cursor: move; user-select: none; -webkit-user-select: none; }
         
-        .control-panel-box {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-        .cloud-config-box {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px dashed var(--border);
-        }
-        .cloud-config-box label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-        .cloud-config-box input {
-            width: 100%;
-            padding: 6px;
-            margin-bottom: 5px;
-            border: 1px solid var(--border);
-            border-radius: 3px;
-            background: var(--app-bg);
-            color: var(--text);
-            box-sizing: border-box;
-            font-size: 11px;
-        }
-        .backup-alert {
-            font-size: 11px;
-            padding: 4px 8px;
-            margin-bottom: 6px;
-            background-color: #fff3cd;
-            border: 1px solid #ffecb5;
-            color: #856404;
-            border-radius: 3px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .app-footer {
-            margin-top: auto;
-            padding-top: 10px;
-            padding-bottom: 48px; 
-            border-top: 1px solid var(--border);
-            text-align: center;
-            font-size: 10px;
-            color: var(--text-muted);
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        
-        .cloud-floating-bubble {
-            position: fixed;
-            bottom: 16px;
-            right: 16px;
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 5px 10px 5px 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 3px 12px var(--shadow);
-            z-index: 5000;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-        .cloud-status-indicator {
-            font-weight: bold;
-            font-size: 11px;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            transition: color 0.3s ease;
-        }
-        .btn-sync-floating {
-            background: none;
-            border: none;
-            font-size: 14px;
-            padding: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
+        /* Control Panel */
+        .control-panel-box { background: var(--surface); border: 1px solid var(--border); padding: 8px; border-radius: 4px; margin-bottom: 8px; font-size: 12px; }
+        .btn-panel-action { padding: 4px 8px; cursor: pointer; }
+        .btn-panel-danger { color: var(--danger); padding: 4px 8px; cursor: pointer; }
+        .cloud-config-box { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+        .cloud-config-box label { display: block; font-weight: bold; margin-bottom: 3px; }
+        .cloud-config-box input { width: 100%; padding: 6px; margin-bottom: 5px; border: 1px solid var(--border); border-radius: 3px; background: var(--app-bg); color: var(--text); box-sizing: border-box; font-size: 11px; }
+        .cloud-label-small { font-weight: normal; margin-bottom: 2px; font-size: 11px; display: block; }
+        .device-status-msg { display: block; margin-bottom: 5px; font-size: 10px; font-weight: bold; }
+        .cloud-fields-container { transition: opacity 0.2s; }
+        .cloud-fields-disabled { opacity: 0.4; pointer-events: none; }
+        .cloud-fields-active { opacity: 1; pointer-events: auto; }
 
-        /* Système v3.1.0+ : Remplissage complet et gestion du contraste de lisibilité */
-        .bubble-success { 
-            background-color: var(--sync-success) !important; 
-            border-color: var(--sync-success) !important; 
-        }
-        .bubble-success #cloud-status { color: #ffffff !important; }
-        .bubble-success .btn-sync-floating { color: #ffffff !important; }
-        .dark-theme .bubble-success #cloud-status { color: #121212 !important; }
-        .dark-theme .bubble-success .btn-sync-floating { color: #121212 !important; }
-        
-        .bubble-warning { 
-            background-color: var(--sync-warning) !important; 
-            border-color: var(--sync-warning) !important; 
-        }
-        .bubble-warning #cloud-status { color: #121212 !important; }
-        .bubble-warning .btn-sync-floating { color: #121212 !important; }
-        .dark-theme .bubble-warning #cloud-status { color: #121212 !important; }
-        .dark-theme .bubble-warning .btn-sync-floating { color: #121212 !important; }
-        
-        .bubble-danger { 
-            background-color: var(--sync-danger) !important; 
-            border-color: var(--sync-danger) !important; 
-        }
-        .bubble-danger #cloud-status { color: #ffffff !important; }
-        .bubble-danger .btn-sync-floating { color: #ffffff !important; }
-        .dark-theme .bubble-danger #cloud-status { color: #121212 !important; }
-        .dark-theme .bubble-danger .btn-sync-floating { color: #121212 !important; }
+        /* Dynamic Classes for JS injected DOM */
+        .btn-icon { background: none; border: none; color: inherit; padding: 6px 10px; cursor: pointer; }
+        .btn-icon-danger { background: none; border: none; color: var(--danger); padding: 6px 10px; cursor: pointer; }
+        .btn-icon-muted { background: none; border: none; color: inherit; opacity: 0.5; cursor: pointer; padding: 6px 8px; }
+        .trash-header-cursor { cursor: default; }
+        .trash-empty-msg { color: #adb5bd; text-align: center; padding: 3px; font-size: 12px; }
+        .btn-empty-trash { background: #6c757d; border: none; color: white; border-radius: 2px; margin-right: 5px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
+        .btn-restore { font-size: 11px; padding: 4px 8px; cursor: pointer; }
+        .text-danger { color: var(--danger); }
+        .text-success-bold { color: var(--sync-success); font-weight: bold; }
+        .text-muted-italic { color: var(--text-muted); font-style: italic; }
+        .inline-edit-input { padding: 4px 6px; flex-grow: 1; min-width: 0; background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .inline-edit-textarea { font-family: inherit; font-size: inherit; width: 100%; box-sizing: border-box; padding: 4px 6px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 3px; resize: none; overflow-y: hidden; }
 
-        /* Animation de pulsation pour la synchronisation V3.3.0 */
+        /* Alerts & Footer */
+        .backup-alert { font-size: 11px; padding: 4px 8px; margin-bottom: 6px; background-color: #fff3cd; border: 1px solid #ffecb5; color: #856404; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-backup-export { padding: 4px 8px; font-size: 11px; background: #fff; border: 1px solid #ffecb5; border-radius: 2px; cursor: pointer; color: #000; }
+        .app-footer { margin-top: auto; padding-top: 10px; padding-bottom: 48px; border-top: 1px solid var(--border); text-align: center; font-size: 10px; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px; }
+        
+        /* Cloud Bubble */
+        .cloud-floating-bubble { position: fixed; bottom: 16px; right: 16px; background-color: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 5px 10px 5px 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 3px 12px var(--shadow); z-index: 5000; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .cloud-status-indicator { font-weight: bold; font-size: 11px; white-space: nowrap; display: flex; align-items: center; transition: color 0.3s ease; }
+        .btn-sync-floating { background: none; border: none; font-size: 14px; padding: 2px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        .bubble-success { background-color: var(--sync-success) !important; border-color: var(--sync-success) !important; }
+        .bubble-success #cloud-status, .bubble-success .btn-sync-floating { color: #ffffff !important; }
+        .dark-theme .bubble-success #cloud-status, .dark-theme .bubble-success .btn-sync-floating { color: #121212 !important; }
+        
+        .bubble-warning { background-color: var(--sync-warning) !important; border-color: var(--sync-warning) !important; }
+        .bubble-warning #cloud-status, .bubble-warning .btn-sync-floating { color: #121212 !important; }
+        .dark-theme .bubble-warning #cloud-status, .dark-theme .bubble-warning .btn-sync-floating { color: #121212 !important; }
+        
+        .bubble-danger { background-color: var(--sync-danger) !important; border-color: var(--sync-danger) !important; }
+        .bubble-danger #cloud-status, .bubble-danger .btn-sync-floating { color: #ffffff !important; }
+        .dark-theme .bubble-danger #cloud-status, .dark-theme .bubble-danger .btn-sync-floating { color: #121212 !important; }
+
         @keyframes syncPulse {
             0% { box-shadow: 0 3px 12px var(--shadow); transform: scale(1); }
             50% { box-shadow: 0 3px 22px var(--sync-warning); transform: scale(1.03); }
             100% { box-shadow: 0 3px 12px var(--shadow); transform: scale(1); }
         }
-        .sync-pulsing {
-            animation: syncPulse 1.5s infinite ease-in-out;
-        }
+        .sync-pulsing { animation: syncPulse 1.5s infinite ease-in-out; }
+        @media (min-width: 650px) { .cloud-floating-bubble { right: calc(50% - 325px + 16px); } }
 
-        @media (min-width: 650px) {
-            .cloud-floating-bubble {
-                right: calc(50% - 325px + 16px);
-            }
-        }
+        /* Conflict Modal */
+        .conflict-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; display: flex; }
+        .conflict-modal-content { background: var(--surface); max-width: 540px; width: 100%; border-radius: 6px; padding: 20px; box-shadow: 0 10px 25px var(--shadow); border: 2px solid var(--primary); box-sizing: border-box; color: var(--text); font-size: 13px; }
+        .conflict-modal-title { color: var(--danger); margin-top: 0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 15px; }
+        .conflict-modal-desc { margin-bottom: 15px; color: var(--text-muted); font-size: 12px; line-height: 1.4; }
+        .conflict-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; text-align: left; }
+        .conflict-table th, .conflict-table td { padding: 6px 4px; vertical-align: top; }
+        .conflict-table th { font-weight: bold; }
+        .col-cloud { color: var(--primary); }
+        .col-local { color: var(--text-muted); }
+        .border-b-2 { border-bottom: 2px solid var(--border); }
+        .border-b-1 { border-bottom: 1px solid var(--border); }
+        .font-bold { font-weight: bold; }
+        
+        .resolve-actions-col { display: flex; flex-direction: column; gap: 8px; }
+        .resolve-actions-row { display: flex; gap: 8px; margin-top: 4px; }
+        .btn-resolve-merge { background: #0dcaf0; color: #000; border: 2px solid #0aa2c0; padding: 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 6px var(--shadow); width: 100%; }
+        .btn-resolve-cloud { flex: 1; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 11px; opacity: 0.9; }
+        .btn-resolve-local { flex: 1; background: none; color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 4px; cursor: pointer; font-size: 11px; opacity: 0.9; }
+
+        /* Diff volume formatting */
+        .diff-list { margin: 0; padding-left: 14px; list-style-type: square; font-size: 11px; line-height: 1.4; max-height: 150px; overflow-y: auto; }
+        .diff-list li { margin-bottom: 2px; }
+        .diff-item-missing { color: var(--danger); opacity: 0.6; text-decoration: line-through; }
+        .diff-item-new, .diff-item-more { color: var(--sync-success); font-weight: bold; }
+        .diff-item-less { color: var(--danger); }
+        .diff-item-neutral { color: var(--text-muted); }
+        .diff-label { font-size: 9px; }
 
         button { cursor: pointer; }
     </style>
@@ -390,19 +185,19 @@
 
     <div class="app-container">
 
-	<div class="app-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid var(--border); margin-bottom: 14px;">
-		<h1 style="margin: 0; font-weight: bold; color: var(--text); letter-spacing: -0.3px;">Juul_Listes-Compactes</h1>
-    	</div>
+        <div class="app-header">
+            <h1 class="app-header-title">Juul_Listes-Compactes</h1>
+        </div>
 
         <div id="alert-container"></div>
 
         <div class="search-bar-container">
             <div class="search-input-wrapper">
                 <input type="text" id="input-search" placeholder="🔍 Rechercher une note ou liste..." autocomplete="off">
-                <button id="btn-clear-search" onclick="clearSearch()" class="hidden" style="position: absolute; right: 0; top: 0; bottom: 0; background: none; border: none; color: var(--text); opacity: 0.5; font-size: 14px; padding: 0 12px; z-index: 5; cursor: pointer;">✕</button>
+                <button id="btn-clear-search" class="btn-clear-search hidden">✕</button>
             </div>
-            <button id="btn-toggle-all" class="btn-action-header" onclick="toggleAllLists()" title="Tout replier / déplier">↕️</button>
-            <button class="btn-action-header" onclick="toggleControlPanel()" title="Configuration & Paramètres">⚙️</button>
+            <button id="btn-toggle-all" class="btn-action-header" title="Tout replier / déplier">↕️</button>
+            <button id="btn-toggle-panel" class="btn-action-header" title="Configuration & Paramètres">⚙️</button>
         </div>
 
         <div id="control-panel" class="control-panel-box hidden">
@@ -411,26 +206,26 @@
                 <button type="submit">Créer Liste</button>
             </form>
             <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
-                <button id="btn-theme" style="padding: 4px 8px; cursor: pointer;" onclick="toggleTheme()">🌓 Auto</button>
-                <button style="padding: 4px 8px; cursor: pointer;" onclick="triggerImport()">📥 Importer</button>
-                <button style="padding: 4px 8px; cursor: pointer;" onclick="exportData()">📤 Exporter</button>
-                <button id="btn-reset" style="padding: 4px 8px; color: var(--danger); cursor: pointer;">🗑️ Reset Global</button>
-                <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importData(event)">
+                <button id="btn-theme" class="btn-panel-action">🌓 Auto</button>
+                <button id="btn-import" class="btn-panel-action">📥 Importer</button>
+                <button id="btn-export" class="btn-panel-action">📤 Exporter</button>
+                <button id="btn-reset" class="btn-panel-danger">🗑️ Reset Global</button>
+                <input type="file" id="import-file-input" class="hidden" accept=".json">
             </div>
             
             <div class="cloud-config-box">
                 <label>☁️ Synchronisation Cloud</label>
                 <div style="margin-top: 4px; margin-bottom: 4px;">
-                    <label for="input-cloud-device" style="font-weight: normal; margin-bottom: 2px; font-size: 11px; display: block;">Nom unique de cet appareil :</label>
+                    <label for="input-cloud-device" class="cloud-label-small">Nom unique de cet appareil :</label>
                     <input type="text" id="input-cloud-device" placeholder="Ex: iPhone Juul, PC Bureau..." autocomplete="off">
-                    <small id="device-status-msg" style="color: var(--danger); display: block; margin-bottom: 5px; font-size: 10px; font-weight: bold;">⚠️ Un nom d'appareil est obligatoire.</small>
+                    <small id="device-status-msg" class="device-status-msg text-danger">⚠️ Un nom d'appareil est obligatoire.</small>
                 </div>
-                <div id="cloud-fields-container" style="transition: opacity 0.2s;">
-                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">URL Web App Google Apps Script :</label>
+                <div id="cloud-fields-container" class="cloud-fields-container">
+                    <label class="cloud-label-small">URL Web App Google Apps Script :</label>
                     <input type="text" id="input-cloud-url" placeholder="URL Web App Google Apps Script..." autocomplete="off">
-                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Clé secrète de chiffrement :</label>
+                    <label class="cloud-label-small">Clé secrète de chiffrement :</label>
                     <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
-                    <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Délai d'inactivité avant envoi (en secondes) :</label>
+                    <label class="cloud-label-small">Délai d'inactivité avant envoi (en secondes) :</label>
                     <input type="number" id="input-cloud-debounce" min="1" max="300" placeholder="10" autocomplete="off">
                 </div>
             </div>
@@ -442,63 +237,55 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 3.3.0</div>
+            <div class="app-version">Version 4.0.0</div>
         </footer>
 
     </div>
 
     <div class="cloud-floating-bubble">
         <div id="cloud-status" class="cloud-status-indicator">☁️ Cloud déconnecté</div>
-        <button id="btn-sync-cloud" class="btn-sync-floating" onclick="lancerSynchroManuel()" title="Synchroniser maintenant (Forcer)">🔄</button>
+        <button id="btn-sync-manual" class="btn-sync-floating" title="Synchroniser maintenant (Forcer)">🔄</button>
     </div>
 
-    <div id="conflict-modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
-        <div style="background: var(--surface); max-width: 540px; width: 100%; border-radius: 6px; padding: 20px; box-shadow: 0 10px 25px var(--shadow); border: 2px solid var(--primary); box-sizing: border-box; color: var(--text); font-size: 13px;">
-            <h3 style="color: var(--danger); margin-top: 0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 15px;">
-                ⚠️ Conflit de Synchronisation Multi-Appareils
-            </h3>
-            <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 12px; line-height: 1.4;">
+    <div id="conflict-modal" class="conflict-modal-overlay hidden">
+        <div class="conflict-modal-content">
+            <h3 class="conflict-modal-title">⚠️ Conflit de Synchronisation Multi-Appareils</h3>
+            <p class="conflict-modal-desc">
                 Les données présentes sur le Cloud proviennent d'un autre appareil. Veuillez choisir la version à conserver pour éviter toute perte accidentelle.
             </p>
             
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; text-align: left;">
+            <table class="conflict-table">
                 <thead>
-                    <tr style="border-bottom: 2px solid var(--border);">
-                        <th style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Critères</th>
-                        <th style="padding: 6px 4px; color: var(--text-muted); vertical-align: top;">Version Locale (Cet appareil)</th>
-                        <th style="padding: 6px 4px; color: var(--primary); vertical-align: top;">Version Cloud</th>
+                    <tr class="border-b-2">
+                        <th>Critères</th>
+                        <th class="col-local">Version Locale (Cet appareil)</th>
+                        <th class="col-cloud">Version Cloud</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Appareil</td>
-                        <td id="conflict-local-device" style="padding: 6px 4px; vertical-align: top;">-</td>
-                        <td id="conflict-cloud-device" style="padding: 6px 4px; font-weight: bold; vertical-align: top;">-</td>
+                    <tr class="border-b-1">
+                        <td class="font-bold">Appareil</td>
+                        <td id="conflict-local-device">-</td>
+                        <td id="conflict-cloud-device" class="font-bold">-</td>
                     </tr>
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Date modif.</td>
-                        <td id="conflict-local-date" style="padding: 6px 4px; vertical-align: top;">-</td>
-                        <td id="conflict-cloud-date" style="padding: 6px 4px; vertical-align: top;">-</td>
+                    <tr class="border-b-1">
+                        <td class="font-bold">Date modif.</td>
+                        <td id="conflict-local-date">-</td>
+                        <td id="conflict-cloud-date">-</td>
                     </tr>
                     <tr>
-                        <td style="padding: 6px 4px; font-weight: bold; vertical-align: top;">Volume</td>
-                        <td id="conflict-local-volume" style="padding: 6px 4px; vertical-align: top; width: 40%;">-</td>
-                        <td id="conflict-cloud-volume" style="padding: 6px 4px; vertical-align: top; width: 40%;">-</td>
+                        <td class="font-bold">Volume</td>
+                        <td id="conflict-local-volume" style="width: 40%;">-</td>
+                        <td id="conflict-cloud-volume" style="width: 40%;">-</td>
                     </tr>
                 </tbody>
             </table>
 
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button id="btn-resolve-merge" style="background: #0dcaf0; color: #000; border: 2px solid #0aa2c0; padding: 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 4px 6px var(--shadow);">
-                    🔵 Fusionner (Recommandé / Sans perte)
-                </button>
-                <div style="display: flex; gap: 8px; margin-top: 4px;">
-                    <button id="btn-resolve-accept-cloud" style="flex: 1; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 4px; font-weight: normal; cursor: pointer; font-size: 11px; opacity: 0.9;">
-                        🟢 Cloud (Écrase Local)
-                    </button>
-                    <button id="btn-resolve-force-local" style="flex: 1; background: none; color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 4px; font-weight: normal; cursor: pointer; font-size: 11px; opacity: 0.9;">
-                        🟠 Local (Écrase Cloud)
-                    </button>
+            <div class="resolve-actions-col">
+                <button id="btn-resolve-merge" class="btn-resolve-merge">🔵 Fusionner (Recommandé / Sans perte)</button>
+                <div class="resolve-actions-row">
+                    <button id="btn-resolve-accept-cloud" class="btn-resolve-cloud">🟢 Cloud (Écrase Local)</button>
+                    <button id="btn-resolve-force-local" class="btn-resolve-local">🟠 Local (Écrase Cloud)</button>
                 </div>
             </div>
         </div>
