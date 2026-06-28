@@ -1,10 +1,10 @@
 /**
  * Juul_Listes-Compactes
- * Version: 2.10.0
- * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
+ * Version: 3.0.0
+ * Description: Application PWA pour la gestion de listes, synchronisation cloud, et résolution de conflits par horodatage (Last-Writer-Wins).
  */
 
-const APP_VERSION = '2.10.0';
+const APP_VERSION = '3.0.0';
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -65,11 +65,18 @@ function init() {
             if (appData.lastCloudSync === undefined) appData.lastCloudSync = null;
             if (appData.lastDevice === undefined) appData.lastDevice = null;
             
+            // Migration silencieuse V3.0.0 : Ajout des timestamps
             appData.lists.forEach(l => {
                 if (!l.id) l.id = 'list_' + Math.random().toString(36).substr(2, 9);
+                if (!l.lastModified) l.lastModified = Date.now();
                 l.notes.forEach(n => {
                     if (!n.id) n.id = 'note_' + Math.random().toString(36).substr(2, 9);
+                    if (!n.lastModified) n.lastModified = Date.now();
                 });
+            });
+            appData.trash.forEach(t => {
+                if (!t.lastModified) t.lastModified = Date.now();
+                if (!t.deletedTs) t.deletedTs = Date.now();
             });
         } catch (e) {
             resetToDefault();
@@ -104,10 +111,11 @@ function init() {
 }
 
 function resetToDefault() {
+    const now = Date.now();
     appData = {
         lists: [
-            { id: 'l1', name: 'À faire', collapsed: false, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()) }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()) }] },
-            { id: 'l2', name: 'En cours', collapsed: false, notes: [] }
+            { id: 'l1', name: 'À faire', collapsed: false, lastModified: now, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()), lastModified: now }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()), lastModified: now }] },
+            { id: 'l2', name: 'En cours', collapsed: false, lastModified: now, notes: [] }
         ],
         trash: [],
         trashCollapsed: true,
@@ -115,7 +123,7 @@ function resetToDefault() {
         themeMode: 'auto',
         lastExport: null,
         lastImport: null,
-        lastLocalChange: 0,
+        lastLocalChange: now,
         lastCloudSync: null,
         lastDevice: null
     };
@@ -328,8 +336,13 @@ function initSortableEngine() {
                     const noteIndex = fromList.notes.findIndex(n => n.id === noteIdMoved);
                     if (noteIndex !== -1) {
                         const [movedNote] = fromList.notes.splice(noteIndex, 1);
+                        movedNote.lastModified = Date.now();
                         toList.notes.push(movedNote);
                     }
+                    fromList.lastModified = Date.now();
+                    toList.lastModified = Date.now();
+                } else {
+                    toList.lastModified = Date.now();
                 }
 
                 const newNotesOrder = [];
@@ -381,6 +394,7 @@ window.enableInlineEdit = (event, listId) => {
         const newName = input.value.trim();
         if (newName && newName !== listData.name) {
             listData.name = newName;
+            listData.lastModified = Date.now();
             saveToBrowser();
         }
         renderAll();
@@ -437,6 +451,7 @@ window.enableNoteEdit = (event, listId, noteId) => {
         const newText = textarea.value.trim();
         if (newText && newText !== noteData.text) {
             noteData.text = newText;
+            noteData.lastModified = Date.now();
             saveToBrowser();
         }
         renderAll();
@@ -459,7 +474,13 @@ formAddList.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = inputListName.value.trim();
     if (!name) return;
-    appData.lists.push({ id: 'list_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), name: name, collapsed: false, notes: [] });
+    appData.lists.push({ 
+        id: 'list_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
+        name: name, 
+        collapsed: false, 
+        notes: [],
+        lastModified: Date.now()
+    });
     inputListName.value = '';
     saveToBrowser();
     renderAll();
@@ -477,7 +498,8 @@ window.addNote = (e, listId) => {
         const newNoteObj = { 
             id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
             text: text,
-            createdStr: formatDate(new Date())
+            createdStr: formatDate(new Date()),
+            lastModified: Date.now()
         };
 
         if (parsed.isPriority) {
@@ -485,6 +507,7 @@ window.addNote = (e, listId) => {
         } else {
             listData.notes.push(newNoteObj);
         }
+        listData.lastModified = Date.now();
         saveToBrowser();
     }
     input.value = '';
@@ -503,10 +526,13 @@ window.deleteList = (listId) => {
     if (index !== -1) {
         const list = appData.lists[index];
         if (confirm(`Supprimer la liste "${list.name}" ?`)) {
+            const now = Date.now();
             list.notes.forEach(note => {
                 note.originListId = list.id;
                 note.originListName = list.name;
-                note.deletedStr = formatDate(new Date());
+                note.deletedStr = formatDate(new Date(now));
+                note.deletedTs = now;
+                note.lastModified = now;
                 appData.trash.unshift(note);
             });
             appData.lists.splice(index, 1);
@@ -521,11 +547,15 @@ window.moveToTrash = (listId, noteId) => {
     if (!listData) return;
     const noteIndex = listData.notes.findIndex(n => n.id === noteId);
     if (noteIndex !== -1) {
+        const now = Date.now();
         const note = listData.notes.splice(noteIndex, 1)[0];
         note.originListId = listData.id;
         note.originListName = listData.name;
-        note.deletedStr = formatDate(new Date());
+        note.deletedStr = formatDate(new Date(now));
+        note.deletedTs = now;
+        note.lastModified = now;
         appData.trash.unshift(note);
+        listData.lastModified = now;
         saveToBrowser();
     }
     renderAll();
@@ -538,11 +568,15 @@ window.restoreFromTrash = (trashIndex) => {
 
     if (targetList) {
         const parsed = getNoteDisplay(note.text);
+        note.lastModified = Date.now();
+        delete note.deletedTs; // Suppression de la marque de suppression
+        
         if (parsed.isPriority) {
-            targetList.notes.unshift({ id: note.id, text: note.text, createdStr: note.createdStr });
+            targetList.notes.unshift({ id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified });
         } else {
-            targetList.notes.push({ id: note.id, text: note.text, createdStr: note.createdStr });
+            targetList.notes.push({ id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified });
         }
+        targetList.lastModified = Date.now();
     } else {
         appData.trash.unshift(note);
     }
@@ -912,53 +946,107 @@ async function resoudreConflitViaLocal() {
     await executerSyncCloudDirecte();
 }
 
-// Fonction de fusion non-destructive v2.10.0
+// Fonction de fusion V3.0.0 (Last-Writer-Wins granulaire)
 async function resoudreConflitViaFusion() {
     if (!currentCloudPayload) return;
     
     const cloudData = currentCloudPayload;
-    
-    // 1. Fusion des Listes et de leurs Notes
-    cloudData.lists.forEach(cloudList => {
-        const localList = appData.lists.find(l => l.id === cloudList.id);
-        
-        if (!localList) {
-            // La liste n'existe pas en local : on l'importe
-            appData.lists.push(cloudList);
-        } else {
-            // La liste existe, on fusionne les notes à l'intérieur
-            cloudList.notes.forEach(cloudNote => {
-                const localNote = localList.notes.find(n => n.id === cloudNote.id);
-                
-                if (!localNote) {
-                    // La note n'existe pas en local : on l'importe
-                    localList.notes.push(cloudNote);
-                } else {
-                    // La note existe, on vérifie si le texte a été modifié
-                    if (localNote.text !== cloudNote.text) {
-                        // Conflit : on conserve la version locale et on importe la version cloud
-                        // avec un nouvel ID et l'émoticône nuage à la fin pour identifier l'origine
-                        const mergedNote = {
-                            ...cloudNote,
-                            id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                            text: cloudNote.text + ' ☁️'
-                        };
-                        localList.notes.push(mergedNote);
-                    }
-                }
-            });
+    const localData = appData;
+
+    // 1. Unification de la Corbeille (Pour repérer les éléments supprimés récemment - Tombstones)
+    const unifiedTrashMap = new Map();
+    [...localData.trash, ...(cloudData.trash || [])].forEach(item => {
+        if (!unifiedTrashMap.has(item.id) || item.lastModified > unifiedTrashMap.get(item.id).lastModified) {
+            unifiedTrashMap.set(item.id, item);
         }
     });
 
-    // 2. Fusion de la Corbeille (historique)
-    if (cloudData.trash && Array.isArray(cloudData.trash)) {
-        cloudData.trash.forEach(cloudTrashItem => {
-            const existsLocally = appData.trash.some(t => t.id === cloudTrashItem.id);
-            if (!existsLocally) {
-                appData.trash.push(cloudTrashItem);
-            }
-        });
-    }
+    const mergedLists = [];
+    const allListIds = new Set([...localData.lists.map(l => l.id), ...cloudData.lists.map(l => l.id)]);
+
+    allListIds.forEach(listId => {
+        const localList = localData.lists.find(l => l.id === listId);
+        const cloudList = cloudData.lists.find(l => l.id === listId);
+        
+        let mergedList = null;
+
+        // Résolution de la liste (Nom, Propriétés)
+        if (localList && cloudList) {
+            mergedList = localList.lastModified >= cloudList.lastModified ? { ...localList } : { ...cloudList };
+            mergedList.notes = []; 
+        } else if (localList) {
+            mergedList = { ...localList, notes: [] };
+        } else if (cloudList) {
+            mergedList = { ...cloudList, notes: [] };
+        }
+
+        if (mergedList) {
+            const localNotes = localList ? localList.notes : [];
+            const cloudNotes = cloudList ? cloudList.notes : [];
+            const allNoteIds = new Set([...localNotes.map(n => n.id), ...cloudNotes.map(n => n.id)]);
+            const mergedNotes = [];
+
+            allNoteIds.forEach(noteId => {
+                const lNote = localNotes.find(n => n.id === noteId);
+                const cNote = cloudNotes.find(n => n.id === noteId);
+                
+                // On vérifie si la note existe dans notre corbeille unifiée
+                const trashItem = unifiedTrashMap.get(noteId);
+                
+                let winningNote = null;
+                if (lNote && cNote) {
+                    winningNote = lNote.lastModified >= cNote.lastModified ? { ...lNote } : { ...cNote };
+                } else if (lNote) {
+                    winningNote = { ...lNote };
+                } else if (cNote) {
+                    winningNote = { ...cNote };
+                }
+
+                // Vérification cruciale du "Tombstone" : La note a-t-elle été supprimée plus récemment que sa dernière modif ?
+                if (winningNote && trashItem && trashItem.deletedTs > winningNote.lastModified) {
+                    // On ne l'ajoute pas, elle reste dans la corbeille.
+                } else if (winningNote) {
+                    mergedNotes.push(winningNote);
+                    unifiedTrashMap.delete(noteId); // Elle vit, on la retire de la corbeille unifiée
+                }
+            });
+
+            // Ordre des notes : On s'appuie sur l'ordre de l'appareil qui a l'historique le plus récent pour la liste.
+            const orderSourceNotes = localList && cloudList 
+                ? (localList.lastModified >= cloudList.lastModified ? localNotes : cloudNotes)
+                : (localList ? localNotes : cloudNotes);
+            
+            mergedNotes.sort((a, b) => {
+                const indexA = orderSourceNotes.findIndex(n => n.id === a.id);
+                const indexB = orderSourceNotes.findIndex(n => n.id === b.id);
+                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                if (indexA !== -1) return -1;
+                if (indexB !== -1) return 1;
+                return b.lastModified - a.lastModified;
+            });
+
+            mergedList.notes = mergedNotes;
+            mergedLists.push(mergedList);
+        }
+    });
+
+    // Ordre des listes globales
+    const masterListOrder = localData.lastLocalChange >= cloudData.lastLocalChange 
+        ? localData.lists.map(l => l.id) 
+        : cloudData.lists.map(l => l.id);
+    
+    mergedLists.sort((a, b) => {
+        const idxA = masterListOrder.indexOf(a.id);
+        const idxB = masterListOrder.indexOf(b.id);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return b.lastModified - a.lastModified;
+    });
+
+    appData.lists = mergedLists;
+    appData.trash = Array.from(unifiedTrashMap.values());
+    appData.trash.sort((a, b) => (b.deletedTs || 0) - (a.deletedTs || 0)); 
 
     fermerModaleConflit();
     updateCloudStatus("⏳ Fusion en cours...", "warning");
@@ -968,7 +1056,6 @@ async function resoudreConflitViaFusion() {
     applyThemeEngine();
     renderAll();
     
-    // Déclenchement immédiat de l'envoi de la version fusionnée parfaite au Cloud
     await executerSyncCloudDirecte();
     updateCloudStatus("☁️ Fusionné et à jour", "success");
 }
