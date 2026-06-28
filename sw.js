@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compact-lists-v4.1.0';
+const CACHE_NAME = 'compact-lists-v4.1.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW : Mise en cache des ressources de base V4.1.0');
+      console.log('SW : Mise en cache des ressources de base V4.1.1');
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );
@@ -34,6 +34,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  // Sécurité Synchro : Ne pas intercepter ni mettre en cache les requêtes vers l'API Google Apps Script
   if (event.request.url.includes('script.google.com')) return;
 
   event.respondWith(
@@ -48,8 +49,11 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => {});
+        .catch(() => {
+          // Échec silencieux du réseau en arrière-plan (ex: mode hors ligne)
+        });
 
+      // Stratégie Stale-While-Revalidate :
       if (cachedResponse) return cachedResponse;
 
       return fetchPromise.then((networkResponse) => {

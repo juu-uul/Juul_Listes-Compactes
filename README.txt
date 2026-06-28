@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v4.1.0 (Mode Focus Journalier)
+Version : v4.1.1 (Mode Focus Journalier - Ajustements UI)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -92,6 +92,7 @@ C. GESTION DES NOTES
 
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v4.1.1 - Ajustements de padding et d'opacité pour le mode focus.
 v4.1.0 - Ajout du mode "Focus" journalier (reset à minuit) avec bouton 
           de filtrage et marqueur visuel sur la bordure gauche.
 v4.0.0 - Refonte majeure : Séparation CSS/JS, modularisation, mode strict.

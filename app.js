@@ -1,11 +1,11 @@
 /**
  * Juul_Listes-Compactes
- * Version: 4.1.0
+ * Version: 4.1.1
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 "use strict";
 
-const APP_VERSION = '4.1.0';
+const APP_VERSION = '4.1.1';
 
 // --- Sélecteurs DOM Centralisés ---
 const DOM = {
@@ -129,7 +129,7 @@ function initServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('PWA : Service Worker enregistré ! V4.1.0', reg.scope))
+                .then(reg => console.log('PWA : Service Worker enregistré ! V4.1.1', reg.scope))
                 .catch(err => console.error('PWA : Échec SW :', err));
         });
     }
