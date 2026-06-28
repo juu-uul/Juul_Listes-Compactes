@@ -434,6 +434,13 @@
                     <input type="password" id="input-cloud-secret" placeholder="Clé secrète de chiffrement..." autocomplete="off">
                     <label style="font-weight: normal; margin-bottom: 2px; font-size: 11px;">Délai d'inactivité avant envoi (en secondes) :</label>
                     <input type="number" id="input-cloud-debounce" min="1" max="300" placeholder="10" autocomplete="off">
+					<label>Délai avant rappel synchro (min) :</label>
+				    <input type="number" 
+				           id="input-sync-reminder-delay" 
+				           value="30" 
+				           min="1" 
+				           onchange="saveSyncReminderDelay(this.value)"
+				           style="width: 100%; padding: 6px; box-sizing: border-box;">
                 </div>
             </div>
         </div>
@@ -507,6 +514,15 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+	<script>
+	    // Ajout lors du chargement de la page pour initialiser la valeur
+	    window.addEventListener('load', () => {
+	        const savedDelay = localStorage.getItem('juul_lists_sync_reminder_delay');
+	        if (savedDelay) {
+	            document.getElementById('input-sync-reminder-delay').value = savedDelay;
+	        }
+	    });
+	</script>
     <script src="./app.js"></script>
 </body>
 </html>
