@@ -49,7 +49,7 @@
         }
         
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 650px; min-height: 100vh; background-color: var(--app-bg); box-shadow: 0 0 15px var(--shadow); box-sizing: border-box; padding: 8px 8px 12px 8px; display: flex; flex-direction: column; }
+        .app-container { width: 100%; max-width: 650px; min-height: 100vh; background-color: var(--app-bg); box-shadow: 0 0 15px var(--shadow); box-sizing: border-box; padding: 56px 8px 12px 8px; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
         
         /* Layout & Header */
@@ -78,7 +78,7 @@
         
         .priority-high { background-color: var(--priority-bg) !important; border-color: var(--priority-border) !important; color: var(--priority-text) !important; }
         .note-question { background-color: var(--question-bg) !important; border-color: var(--question-border) !important; color: var(--question-text) !important; }
-        .note-focus-active { border-left: 4px solid var(--primary) !important; padding-left: 3px !important; } /* 3px compense l'ajout des 4px de bordure */
+        .note-focus-active { border-left: 4px solid var(--primary) !important; padding-left: 3px !important; } 
         
         .note-main { display: flex; flex-direction: column; flex-grow: 1; cursor: pointer; }
         .note-text-span, .note-main span { white-space: pre-wrap; word-break: break-word; }
@@ -126,28 +126,27 @@
         /* Alerts & Footer */
         .backup-alert { font-size: 11px; padding: 4px 8px; margin-bottom: 6px; background-color: #fff3cd; border: 1px solid #ffecb5; color: #856404; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
         .btn-backup-export { padding: 4px 8px; font-size: 11px; background: #fff; border: 1px solid #ffecb5; border-radius: 2px; cursor: pointer; color: #000; }
-        .app-footer { margin-top: auto; padding-top: 10px; padding-bottom: 48px; border-top: 1px solid var(--border); text-align: center; font-size: 10px; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px; }
+        .app-footer { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; font-size: 10px; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px; }
         
         /* Cloud Bubble */
-        .cloud-floating-bubble { position: fixed; bottom: 16px; right: 16px; background-color: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 5px 10px 5px 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 3px 12px var(--shadow); z-index: 5000; transition: background-color 0.3s ease, border-color 0.3s ease; }
-        .cloud-status-indicator { font-weight: bold; font-size: 11px; white-space: nowrap; display: flex; align-items: center; transition: color 0.3s ease; }
-        .btn-sync-floating { background: none; border: none; font-size: 14px; padding: 2px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .cloud-floating-bubble { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); background-color: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 8px 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 3px 12px var(--shadow); z-index: 5000; transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease; cursor: pointer; user-select: none; }
+        .cloud-floating-bubble:active { transform: translateX(-50%) scale(0.97); }
+        .cloud-status-indicator { font-weight: bold; font-size: 13px; white-space: nowrap; display: flex; align-items: center; transition: color 0.3s ease; }
         
         .bubble-success { background-color: var(--sync-success) !important; border-color: var(--sync-success) !important; }
-        .bubble-success #cloud-status, .bubble-success .btn-sync-floating { color: #ffffff !important; }
-        .dark-theme .bubble-success #cloud-status, .dark-theme .bubble-success .btn-sync-floating { color: #121212 !important; }
+        .bubble-success #cloud-status { color: #ffffff !important; }
+        .dark-theme .bubble-success #cloud-status { color: #121212 !important; }
         
         .bubble-warning { background-color: var(--sync-warning) !important; border-color: var(--sync-warning) !important; }
-        .bubble-warning #cloud-status, .bubble-warning .btn-sync-floating { color: #121212 !important; }
-        .dark-theme .bubble-warning #cloud-status, .dark-theme .bubble-warning .btn-sync-floating { color: #121212 !important; }
+        .bubble-warning #cloud-status { color: #121212 !important; }
+        .dark-theme .bubble-warning #cloud-status { color: #121212 !important; }
         
         .bubble-danger { background-color: var(--sync-danger) !important; border-color: var(--sync-danger) !important; }
-        .bubble-danger #cloud-status, .bubble-danger .btn-sync-floating { color: #ffffff !important; }
-        .dark-theme .bubble-danger #cloud-status, .dark-theme .bubble-danger .btn-sync-floating { color: #121212 !important; }
+        .bubble-danger #cloud-status { color: #ffffff !important; }
+        .dark-theme .bubble-danger #cloud-status { color: #121212 !important; }
 
-        @keyframes syncPulse { 0% { box-shadow: 0 3px 12px var(--shadow); transform: scale(1); } 50% { box-shadow: 0 3px 22px var(--sync-warning); transform: scale(1.03); } 100% { box-shadow: 0 3px 12px var(--shadow); transform: scale(1); } }
+        @keyframes syncPulse { 0% { box-shadow: 0 3px 12px var(--shadow); transform: translateX(-50%) scale(1); } 50% { box-shadow: 0 3px 22px var(--sync-warning); transform: translateX(-50%) scale(1.03); } 100% { box-shadow: 0 3px 12px var(--shadow); transform: translateX(-50%) scale(1); } }
         .sync-pulsing { animation: syncPulse 1.5s infinite ease-in-out; }
-        @media (min-width: 650px) { .cloud-floating-bubble { right: calc(50% - 325px + 16px); } }
 
         /* Conflict Modal */
         .conflict-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; display: flex; }
@@ -237,14 +236,14 @@
         <footer class="app-footer">
             <div id="backup-timestamps"></div>
             <div id="storage-info"></div>
-            <div class="app-version">Version 4.1.1</div>
+            <div class="app-version">Version 4.2.0</div>
         </footer>
 
     </div>
 
-    <div class="cloud-floating-bubble">
+    <div id="btn-sync-manual" class="cloud-floating-bubble" title="Synchroniser maintenant (Forcer)" role="button" tabindex="0">
         <div id="cloud-status" class="cloud-status-indicator">☁️ Cloud déconnecté</div>
-        <button id="btn-sync-manual" class="btn-sync-floating" title="Synchroniser maintenant (Forcer)">🔄</button>
+        <span style="font-size: 14px;">🔄</span>
     </div>
 
     <div id="conflict-modal" class="conflict-modal-overlay hidden">

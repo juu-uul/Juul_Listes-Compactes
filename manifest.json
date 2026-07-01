@@ -2,7 +2,7 @@
   "name": "Juul_Listes-Compactes",
   "short_name": "JuulListes",
   "description": "Gestionnaire de listes compact et performant utilisable hors ligne.",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8f9fa",

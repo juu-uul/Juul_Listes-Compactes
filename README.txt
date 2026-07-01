@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v4.1.1 (Mode Focus Journalier - Ajustements UI)
+Version : v4.2.0 (Bulle Sync Centrée - Agrandie)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -16,7 +16,6 @@ Juul_Listes-Compactes est un gestionnaire de tâches et de listes épuré,
 conçu pour offrir une productivité maximale sans fioritures.
 L'interface a été densifiée au maximum pour éliminer le défilement inutile et 
 permettre une vision globale d'un seul coup d'œil.
-
 Caractéristiques principales :
 - Refonte structurelle du code pour une maintenabilité accrue.
 - Interface ultra-compacte et minimaliste.
@@ -36,7 +35,6 @@ Fiche Technique :
 - Technologies : HTML5, CSS3, JavaScript natif (ES6).
 - Librairie externe : SortableJS (via CDN).
 - Limite de stockage local : ~5 Mo (5120 Ko) max via LocalStorage.
-
 ------------------------------------------------------------------------
 2. STRUCTURE DU PROJET (CONTENU DU DOSSIER)
 Le dossier de l'application doit impérativement contenir les fichiers suivants :
@@ -45,7 +43,8 @@ Le dossier de l'application doit impérativement contenir les fichiers suivants 
  ├── app.js           -> Logique applicative, séparation des modules et synchro API
  ├── sw.js            -> Service Worker gérant le cache
  ├── manifest.json    -> Fichier de configuration PWA (icônes, couleurs, nom)
- └── README.txt       -> Le présent fichier d'information et mode d'emploi
+ └── README.txt       -> Le présent fichier d'information et 
+mode d'emploi
 
 ------------------------------------------------------------------------
 3. LE SYSTÈME CLOUD & PROTOCOLE SÉCURITÉ SESSIONS
@@ -54,18 +53,15 @@ Pour activer la synchronisation automatique :
 2. Renseignez obligatoirement le champ "Nom unique de cet appareil".
 3. Collez votre URL Google Apps Script et saisissez votre clé secrète.
 4. Ajustez le champ "Délai d'inactivité avant envoi (en secondes)".
-
 CODE COULEUR ET REMPLISSAGE DE LA BULLE FLOTTANTE :
 - 🟢 VERT : L'application est synchronisée et parfaitement à jour.
 - 🟠 ORANGE : Opération en cours, attente de fin de saisie ou déconnexion.
 - 🔴 ROUGE : Erreur réseau, authentification défaillante ou conflit.
-
 MOTEUR DE RÉSOLUTION DES CONFLITS (FUSION NON-DESTRUCTIVE) :
 Si un conflit survient, l'interface propose 3 options :
 - 🔵 FUSION (Recommandé) : Additionne les listes et notes locales et Cloud.
 - 🟢 TÉLÉCHARGER LE CLOUD : Écrase vos données locales.
 - 🟠 FORCER LE LOCAL : Écrase les données distantes.
-
 ------------------------------------------------------------------------
 4. MODE D'EMPLOI CLASSIQUE
 
@@ -73,25 +69,25 @@ A. INSTALLATION (PWA)
 - Sur Ordinateur : Cliquez sur l'icône d'installation dans la barre d'adresse.
 - Sur Android : Menu Chrome (3 points) > "Ajouter à l'écran d'accueil".
 - Sur iOS : Safari > "Partager" > "Sur l'écran d'accueil".
-
 B. GESTION DES LISTES
 - Créer une liste : Ouvrez "⚙️", saisissez le nom et validez.
 - Replier / Déplier : Cliquez sur la flèche (▶ ou ▼).
 - Renommer : Double-cliquez sur le titre de la liste.
 - Supprimer : Cliquez sur la croix rouge (✕) à droite du titre.
-
 C. GESTION DES NOTES
 - Ajouter : Saisissez votre texte dans le champ "Ajouter...".
 - Mode Focus (🎯) : Cliquez sur la cible pour mettre une tâche en focus
-  pour la journée. Un bord bleu apparaît. Appuyez sur la cible dans la 
+  pour la journée.
+Un bord bleu apparaît. Appuyez sur la cible dans la 
   barre de recherche pour ne voir que vos priorités de la journée.
 - Code d'Urgence (!) : Commencez par '!' pour colorer en rouge.
-- Code d'Incertitude (?) : Commencez par '?' pour colorer en jaune.
+- Code d'Incertitude (?) : Commencez par '?'
+pour colorer en jaune.
 - Modifier : Double-cliquez sur la note pour édition instantanée.
 - Supprimer : Cliquez sur la croix grise (✕) à droite.
-
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v4.2.0 - Déplacement de la bulle de synchronisation en haut au centre, agrandissement et zone 100% cliquable.
 v4.1.1 - Ajustements de padding et d'opacité pour le mode focus.
 v4.1.0 - Ajout du mode "Focus" journalier (reset à minuit) avec bouton 
           de filtrage et marqueur visuel sur la bordure gauche.
