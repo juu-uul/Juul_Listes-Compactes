@@ -1,11 +1,11 @@
 /**
  * Juul_Listes-Compactes
- * Version: 4.3.0
+ * Version: 4.2.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 "use strict";
 
-const APP_VERSION = '4.3.0';
+const APP_VERSION = '4.2.0';
 
 // --- Sélecteurs DOM Centralisés ---
 const DOM = {
@@ -129,7 +129,7 @@ function initServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('PWA : Service Worker enregistré ! V4.3.0', reg.scope))
+                .then(reg => console.log('PWA : Service Worker enregistré ! V4.2.0', reg.scope))
                 .catch(err => console.error('PWA : Échec SW :', err));
         });
     }
@@ -644,7 +644,7 @@ function initSortableEngine() {
 function initEventListeners() {
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-            console.log("V4.3.0 : Retour au premier plan, synchro auto...");
+            console.log("V4.2.0 : Retour au premier plan, synchro auto...");
             cleanExpiredFocus();
             renderAll();
             initialiserSynchroCloud();
@@ -660,15 +660,6 @@ function initEventListeners() {
                 appData.lastDevice = localDevice;
                 fetch(url, { method: 'POST', keepalive: true, body: JSON.stringify({ action: 'set', secret: secret, data: appData }) });
             }
-        }
-    });
-
-    // Auto-scroll mobile : évite le masquage des champs par le clavier virtuel
-    DOM.listsContainer.addEventListener('focusin', (e) => {
-        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
-            setTimeout(() => {
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
         }
     });
 
