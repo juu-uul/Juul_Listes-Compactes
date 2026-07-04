@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v5.0.0 (PWA EDGE install fix)
+Version : v5.1.0 (Cache Busting Icônes)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -86,6 +86,7 @@ C. GESTION DES NOTES
 - Supprimer : Cliquez sur la croix grise (✕) à droite.
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v5.1.0 - Implémentation du cache-busting pour forcer la mise à jour des icônes PWA.
 v5.0.0 - Passage en version 5.0.0
 v4.4.0 - PWA EDGE install fix
 v4.3.0 - Ergonomie mobile : auto-scroll intelligent lors du focus pour éviter

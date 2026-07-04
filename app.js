@@ -1,11 +1,11 @@
 /**
  * Juul_Listes-Compactes
- * Version: 5.0.0
+ * Version: 5.1.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 "use strict";
 
-const APP_VERSION = '5.0.0';
+const APP_VERSION = '5.1.0';
 
 // --- Sélecteurs DOM Centralisés ---
 const DOM = {
@@ -129,7 +129,7 @@ function initServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('PWA : Service Worker enregistré ! V5.0.0', reg.scope))
+                .then(reg => console.log('PWA : Service Worker enregistré ! V5.1.0', reg.scope))
                 .catch(err => console.error('PWA : Échec SW :', err));
         });
     }
@@ -644,7 +644,7 @@ function initSortableEngine() {
 function initEventListeners() {
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-            console.log("V5.0.0 : Retour au premier plan, synchro auto...");
+            console.log("V5.1.0 : Retour au premier plan, synchro auto...");
             cleanExpiredFocus();
             renderAll();
             initialiserSynchroCloud();
