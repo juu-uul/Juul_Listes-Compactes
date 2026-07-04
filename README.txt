@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v4.2.0 (Bulle Sync Centrée - Agrandie)
+Version : v4.4.0 (PWA EDGE install fix)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -30,6 +30,7 @@ Caractéristiques principales :
 - Gestion intelligente des conflits avec option de fusion non-destructive.
 - Bulle de synchronisation avec remplissage complet Vert/Orange/Rouge.
 - Paramétrage personnalisé de la temporisation (debounce) d'envoi automatique.
+- Auto-scroll intelligent sur mobile : empêche le clavier de masquer la saisie.
 
 Fiche Technique :
 - Technologies : HTML5, CSS3, JavaScript natif (ES6).
@@ -41,10 +42,9 @@ Le dossier de l'application doit impérativement contenir les fichiers suivants 
 
  ├── index.html       -> Interface utilisateur, styles CSS, modale de conflit
  ├── app.js           -> Logique applicative, séparation des modules et synchro API
- ├── sw.js            -> Service Worker gérant le cache
+ ├── sw.js            -> Service Worker gérant le cache (versionné pour mise à jour)
  ├── manifest.json    -> Fichier de configuration PWA (icônes, couleurs, nom)
- └── README.txt       -> Le présent fichier d'information et 
-mode d'emploi
+ └── README.txt       -> Le présent fichier d'information et mode d'emploi
 
 ------------------------------------------------------------------------
 3. LE SYSTÈME CLOUD & PROTOCOLE SÉCURITÉ SESSIONS
@@ -76,17 +76,19 @@ B. GESTION DES LISTES
 - Supprimer : Cliquez sur la croix rouge (✕) à droite du titre.
 C. GESTION DES NOTES
 - Ajouter : Saisissez votre texte dans le champ "Ajouter...".
+- Auto-Scroll Mobile : Lors de la saisie, le champ est automatiquement centré 
+  dans le viewport visible pour éviter le masquage par le clavier virtuel.
 - Mode Focus (🎯) : Cliquez sur la cible pour mettre une tâche en focus
   pour la journée.
-Un bord bleu apparaît. Appuyez sur la cible dans la 
-  barre de recherche pour ne voir que vos priorités de la journée.
 - Code d'Urgence (!) : Commencez par '!' pour colorer en rouge.
-- Code d'Incertitude (?) : Commencez par '?'
-pour colorer en jaune.
+- Code d'Incertitude (?) : Commencez par '?' pour colorer en jaune.
 - Modifier : Double-cliquez sur la note pour édition instantanée.
 - Supprimer : Cliquez sur la croix grise (✕) à droite.
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v4.4.0 - PWA EDGE install fix
+v4.3.0 - Ergonomie mobile : auto-scroll intelligent lors du focus pour éviter
+          le recouvrement des champs par le clavier virtuel.
 v4.2.0 - Déplacement de la bulle de synchronisation en haut au centre, agrandissement et zone 100% cliquable.
 v4.1.1 - Ajustements de padding et d'opacité pour le mode focus.
 v4.1.0 - Ajout du mode "Focus" journalier (reset à minuit) avec bouton 
