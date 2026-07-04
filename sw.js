@@ -1,70 +1,52 @@
-const CACHE_NAME = 'compact-lists-v4.2.0';
+const CACHE_NAME = 'juul-listes-compactes-v4.3.0';
+
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './app.js',
-  './manifest.json',
-  'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js'
+    './',
+    './index.html',
+    './app.js',
+    './manifest.json',
+    'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js'
 ];
 
+// Installation : Mise en cache des ressources statiques
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW : Mise en cache des ressources de base V4.2.0');
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
-  );
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('[Service Worker] Mise en cache des ressources hors-ligne');
+            return cache.addAll(ASSETS_TO_CACHE);
+        })
+    );
+    self.skipWaiting(); // Force l'activation immédiate du nouveau SW
 });
 
+// Activation : Nettoyage des anciens caches pour forcer la mise à jour (ex: passage de v4.2.0 à v4.3.0)
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('SW : Nettoyage de l\'ancien cache', cache);
-            return caches.delete(cache);
-          }
+    event.waitUntil(
+        caches.keys().then((keyList) => {
+            return Promise.all(keyList.map((key) => {
+                if (key !== CACHE_NAME) {
+                    console.log('[Service Worker] Suppression de l\'ancien cache', key);
+                    return caches.delete(key);
+                }
+            }));
         })
-      );
-    }).then(() => self.clients.claim())
-  );
+    );
+    self.clients.claim(); // Prise de contrôle immédiate des clients ouverts
 });
 
+// Interception des requêtes : Stratégie Cache First, Network Fallback
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+    // On n'intercepte pas les requêtes vers le Cloud (Google Apps Script)
+    if (event.request.url.includes('script.google.com')) {
+        return;
+    }
 
-  // Sécurité Synchro : Ne pas intercepter ni mettre en cache les requêtes vers l'API Google Apps Script
-  if (event.request.url.includes('script.google.com')) return;
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            return cachedResponse || fetch(event.request).catch(() => {
+                // Optionnel : fallback visuel si réseau indisponible et ressource non cachée
+                console.warn('[Service Worker] Ressource indisponible hors-ligne :', event.request.url);
             });
-          }
-          return networkResponse;
         })
-        .catch(() => {
-          // Échec silencieux du réseau en arrière-plan (ex: mode hors ligne)
-        });
-
-      // Stratégie Stale-While-Revalidate :
-      if (cachedResponse) return cachedResponse;
-
-      return fetchPromise.then((networkResponse) => {
-        if (networkResponse) return networkResponse;
-
-        return new Response('Connexion Internet requise pour cette ressource.', {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
-        });
-      });
-    })
-  );
+    );
 });
