@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v5.1.0 (Cache Busting Icônes)
+Version : v5.2.0 (Intégration parentListId & Icônes V2)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -31,6 +31,7 @@ Caractéristiques principales :
 - Bulle de synchronisation avec remplissage complet Vert/Orange/Rouge.
 - Paramétrage personnalisé de la temporisation (debounce) d'envoi automatique.
 - Auto-scroll intelligent sur mobile : empêche le clavier de masquer la saisie.
+- Traçabilité structurelle absolue : injection de la propriété parentListId sur chaque note.
 
 Fiche Technique :
 - Technologies : HTML5, CSS3, JavaScript natif (ES6).
@@ -45,6 +46,9 @@ Le dossier de l'application doit impérativement contenir les fichiers suivants 
  ├── sw.js            -> Service Worker gérant le cache (versionné pour mise à jour)
  ├── manifest.json    -> Fichier de configuration PWA (icônes, couleurs, nom)
  └── README.txt       -> Le présent fichier d'information et mode d'emploi
+ ├── icon72.png     -> Icone 72x72 px
+ ├── icon192.png    -> Icone 192x192 px
+ ├── icon512.png    -> Icone 512x512 px
 
 ------------------------------------------------------------------------
 3. LE SYSTÈME CLOUD & PROTOCOLE SÉCURITÉ SESSIONS
@@ -86,6 +90,7 @@ C. GESTION DES NOTES
 - Supprimer : Cliquez sur la croix grise (✕) à droite.
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v5.2.0 - Ajout définitif de la propriété parentListId sur chaque note (création, dnd, fusion).
 v5.1.0 - Implémentation du cache-busting pour forcer la mise à jour des icônes PWA.
 v5.0.0 - Passage en version 5.0.0
 v4.4.0 - PWA EDGE install fix
@@ -96,17 +101,4 @@ v4.1.1 - Ajustements de padding et d'opacité pour le mode focus.
 v4.1.0 - Ajout du mode "Focus" journalier (reset à minuit) avec bouton 
           de filtrage et marqueur visuel sur la bordure gauche.
 v4.0.0 - Refonte majeure : Séparation CSS/JS, modularisation, mode strict.
-v3.3.0 - Ajout animation de la bulle lors d'un sync.
-v3.2.0 - Ajout sync-on-focus.
-v3.1.0 - Nouvelle fenêtre de gestion de conflits.
-v3.0.0 - Ajout de la stratégie de conflit "Last Write Wins".
-v2.10.0 - Optimisation ergonomique : boutons et champs de saisie agrandis.
-v2.9.0 - Mise à jour de maintenance.
-v2.8.0 - Ajout d'une option de fusion (merge) non-destructive.
-v2.7.0 - Amélioration des performances et de la résilience.
-v2.6.0 - Refonte visuelle de la bulle flottante.
-v2.5.0 - Amélioration de l'écran de conflit.
-v2.4.0 - Ajout du paramètre numérique pour le délai de debounce.
-v2.3.0 - Ajout du système de code couleur dynamique.
-v2.2.0 - Ajout du nom d'appareil unique obligatoire.
 ========================================================================

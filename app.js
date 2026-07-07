@@ -1,11 +1,11 @@
 /**
  * Juul_Listes-Compactes
- * Version: 5.1.0
+ * Version: 5.2.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 "use strict";
 
-const APP_VERSION = '5.1.0';
+const APP_VERSION = '5.2.0';
 
 // --- Sélecteurs DOM Centralisés ---
 const DOM = {
@@ -103,12 +103,14 @@ function initData() {
                     if (!n.id) n.id = 'note_' + Math.random().toString(36).substr(2, 9);
                     if (!n.lastModified) n.lastModified = Date.now();
                     if (n.focusDate === undefined) n.focusDate = null;
+                    n.parentListId = l.id;
                 });
             });
             appData.trash.forEach(t => {
                 if (!t.lastModified) t.lastModified = Date.now();
                 if (!t.deletedTs) t.deletedTs = Date.now();
                 if (t.focusDate === undefined) t.focusDate = null;
+                if (!t.parentListId && t.originListId) t.parentListId = t.originListId;
             });
         } catch (e) {
             resetToDefault();
@@ -129,7 +131,7 @@ function initServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('PWA : Service Worker enregistré ! V5.1.0', reg.scope))
+                .then(reg => console.log('PWA : Service Worker enregistré ! V5.2.0', reg.scope))
                 .catch(err => console.error('PWA : Échec SW :', err));
         });
     }
@@ -140,7 +142,7 @@ function resetToDefault() {
     const now = Date.now();
     appData = {
         lists: [
-            { id: 'l1', name: 'À faire', collapsed: false, lastModified: now, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()), lastModified: now, focusDate: null }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()), lastModified: now, focusDate: null }] },
+            { id: 'l1', name: 'À faire', collapsed: false, lastModified: now, notes: [{ id: 'n1', text: '!Tâche urgente exemple', createdStr: formatDate(new Date()), lastModified: now, focusDate: null, parentListId: 'l1' }, { id: 'n2', text: 'Tâche normale compacte', createdStr: formatDate(new Date()), lastModified: now, focusDate: null, parentListId: 'l1' }] },
             { id: 'l2', name: 'En cours', collapsed: false, lastModified: now, notes: [] }
         ],
         trash: [], trashCollapsed: true, panelCollapsed: true, themeMode: 'auto',
@@ -327,6 +329,7 @@ window.AppActions = {
                 const now = Date.now();
                 list.notes.forEach(note => {
                     note.originListId = list.id; note.originListName = list.name;
+                    note.parentListId = list.id;
                     note.deletedStr = formatDate(new Date(now)); note.deletedTs = now; note.lastModified = now;
                     appData.trash.unshift(note);
                 });
@@ -343,7 +346,14 @@ window.AppActions = {
         const listData = appData.lists.find(l => l.id === listId);
         if (listData) {
             const parsed = getNoteDisplay(text);
-            const newNoteObj = { id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), text: text, createdStr: formatDate(new Date()), lastModified: Date.now(), focusDate: null };
+            const newNoteObj = { 
+                id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
+                text: text, 
+                createdStr: formatDate(new Date()), 
+                lastModified: Date.now(), 
+                focusDate: null,
+                parentListId: listId 
+            };
             if (parsed.isPriority) listData.notes.unshift(newNoteObj); else listData.notes.push(newNoteObj);
             listData.lastModified = Date.now(); saveToBrowser();
         }
@@ -357,6 +367,7 @@ window.AppActions = {
             const now = Date.now();
             const note = listData.notes.splice(noteIndex, 1)[0];
             note.originListId = listData.id; note.originListName = listData.name;
+            note.parentListId = listData.id;
             note.deletedStr = formatDate(new Date(now)); note.deletedTs = now; note.lastModified = now;
             appData.trash.unshift(note); listData.lastModified = now; saveToBrowser(); renderAll();
         }
@@ -368,8 +379,9 @@ window.AppActions = {
         if (targetList) {
             const parsed = getNoteDisplay(note.text);
             note.lastModified = Date.now(); delete note.deletedTs; 
+            note.parentListId = targetList.id;
             if (note.focusDate && note.focusDate !== getTodayStr()) note.focusDate = null;
-            const newObj = { id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified, focusDate: note.focusDate };
+            const newObj = { id: note.id, text: note.text, createdStr: note.createdStr, lastModified: note.lastModified, focusDate: note.focusDate, parentListId: note.parentListId };
             if (parsed.isPriority) targetList.notes.unshift(newObj); else targetList.notes.push(newObj);
             targetList.lastModified = Date.now();
         } else {
@@ -623,7 +635,9 @@ function initSortableEngine() {
                     const noteIndex = fromList.notes.findIndex(n => n.id === noteIdMoved);
                     if (noteIndex !== -1) {
                         const [movedNote] = fromList.notes.splice(noteIndex, 1);
-                        movedNote.lastModified = Date.now(); toList.notes.push(movedNote);
+                        movedNote.lastModified = Date.now();
+                        movedNote.parentListId = toListId;
+                        toList.notes.push(movedNote);
                     }
                 }
                 fromList.lastModified = Date.now(); toList.lastModified = Date.now();
@@ -631,7 +645,10 @@ function initSortableEngine() {
                 const newNotesOrder = [];
                 evt.to.querySelectorAll('.note-item').forEach(li => {
                     const foundNote = toList.notes.find(n => n.id === li.dataset.id);
-                    if (foundNote) newNotesOrder.push(foundNote);
+                    if (foundNote) {
+                        foundNote.parentListId = toListId;
+                        newNotesOrder.push(foundNote);
+                    }
                 });
                 toList.notes = newNotesOrder; saveToBrowser(); setTimeout(renderAll, 0);
             }
@@ -644,7 +661,7 @@ function initSortableEngine() {
 function initEventListeners() {
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-            console.log("V5.1.0 : Retour au premier plan, synchro auto...");
+            console.log("V5.2.0 : Retour au premier plan, synchro auto...");
             cleanExpiredFocus();
             renderAll();
             initialiserSynchroCloud();
@@ -663,7 +680,6 @@ function initEventListeners() {
         }
     });
 
-    // Auto-scroll mobile : évite le masquage des champs par le clavier virtuel
     DOM.listsContainer.addEventListener('focusin', (e) => {
         if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
             setTimeout(() => {
@@ -717,7 +733,6 @@ function initEventListeners() {
         fileReader.readAsText(file);
     });
 
-    // Écouteur pour forcer la synchro depuis l'ensemble de la bulle
     DOM.cloud.btnSyncManual.addEventListener('click', initialiserSynchroCloud);
 }
 
@@ -900,7 +915,9 @@ async function resoudreConflitViaFusion() {
 
     const unifiedTrashMap = new Map();
     [...localData.trash, ...(cloudData.trash || [])].forEach(item => {
-        if (!unifiedTrashMap.has(item.id) || item.lastModified > unifiedTrashMap.get(item.id).lastModified) { unifiedTrashMap.set(item.id, item); }
+        if (!unifiedTrashMap.has(item.id) || item.lastModified > unifiedTrashMap.get(item.id).lastModified) { 
+            unifiedTrashMap.set(item.id, item); 
+        }
     });
 
     const mergedLists = [];
@@ -929,8 +946,12 @@ async function resoudreConflitViaFusion() {
                 else if (lNote) winningNote = { ...lNote };
                 else if (cNote) winningNote = { ...cNote };
 
-                if (winningNote && trashItem && trashItem.deletedTs > winningNote.lastModified) { /* Skip, reste dans la corbeille */ } 
-                else if (winningNote) { mergedNotes.push(winningNote); unifiedTrashMap.delete(noteId); }
+                if (winningNote && trashItem && trashItem.deletedTs > winningNote.lastModified) { /* Skip */ } 
+                else if (winningNote) { 
+                    winningNote.parentListId = listId;
+                    mergedNotes.push(winningNote); 
+                    unifiedTrashMap.delete(noteId); 
+                }
             });
 
             const orderSourceNotes = localList && cloudList ? (localList.lastModified >= cloudList.lastModified ? localNotes : cloudNotes) : (localList ? localNotes : cloudNotes);
@@ -961,5 +982,4 @@ async function resoudreConflitViaFusion() {
     await executerSyncCloudDirecte(); updateCloudStatus("☁️ Fusionné et à jour", "success");
 }
 
-// Lancement au chargement du script
 init();
