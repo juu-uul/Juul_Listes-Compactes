@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v5.2.0 (Intégration parentListId)
+Version : v5.3.0 (Correction de l'auto-scroll mobile)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -90,15 +90,14 @@ C. GESTION DES NOTES
 - Supprimer : Cliquez sur la croix grise (✕) à droite.
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v5.3.0 - Correction de l'auto-scroll lors du glisser-déposer sur mobile et ajout de paramètres avancés pour SortableJS.
 v5.2.0 - Ajout définitif de la propriété parentListId sur chaque note (création, dnd, fusion).
 v5.1.0 - Implémentation du cache-busting pour forcer la mise à jour des icônes PWA.
 v5.0.0 - Passage en version 5.0.0
 v4.4.0 - PWA EDGE install fix
-v4.3.0 - Ergonomie mobile : auto-scroll intelligent lors du focus pour éviter
-          le recouvrement des champs par le clavier virtuel.
+v4.3.0 - Ergonomie mobile : auto-scroll intelligent lors du focus pour éviter le recouvrement des champs.
 v4.2.0 - Déplacement de la bulle de synchronisation en haut au centre, agrandissement et zone 100% cliquable.
 v4.1.1 - Ajustements de padding et d'opacité pour le mode focus.
-v4.1.0 - Ajout du mode "Focus" journalier (reset à minuit) avec bouton 
-          de filtrage et marqueur visuel sur la bordure gauche.
+v4.1.0 - Ajout du mode "Focus" journalier (reset à minuit) avec bouton de filtrage.
 v4.0.0 - Refonte majeure : Séparation CSS/JS, modularisation, mode strict.
 ========================================================================

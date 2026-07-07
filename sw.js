@@ -1,19 +1,19 @@
-const CACHE_NAME = 'compact-lists-v5.2.0';
+const CACHE_NAME = 'compact-lists-v5.3.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
-  './icon72.png?v=5.2.0',
-  './icon192.png?v=5.2.0',
-  './icon512.png?v=5.2.0',
+  './icon72.png?v=5.3.0',
+  './icon192.png?v=5.3.0',
+  './icon512.png?v=5.3.0',
   'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW : Mise en cache des ressources de base V5.2.0');
+      console.log('SW : Mise en cache des ressources de base V5.3.0');
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );
