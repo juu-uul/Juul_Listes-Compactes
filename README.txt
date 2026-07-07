@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v5.2.0 (Intégration parentListId & Icônes V2)
+Version : v5.2.0 (Intégration parentListId)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
