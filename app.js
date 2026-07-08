@@ -1,11 +1,11 @@
 /**
  * Juul_Listes-Compactes
- * Version: 5.3.0
+ * Version: 5.4.0
  * Description: Application PWA pour la gestion de listes, synchronisation cloud, et fusion non-destructive.
  */
 "use strict";
 
-const APP_VERSION = '5.3.0';
+const APP_VERSION = '5.4.0';
 
 // --- Sélecteurs DOM Centralisés ---
 const DOM = {
@@ -131,7 +131,7 @@ function initServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('PWA : Service Worker enregistré ! V5.3.0', reg.scope))
+                .then(reg => console.log('PWA : Service Worker enregistré ! V5.4.0', reg.scope))
                 .catch(err => console.error('PWA : Échec SW :', err));
         });
     }
@@ -611,7 +611,14 @@ function initSortableEngine() {
     const s1 = Sortable.create(DOM.listsContainer, {
         animation: 120, handle: '.list-drag-handle', ghostClass: 'ghost-list',
         scroll: true, scrollSensitivity: 80, scrollSpeed: 15, forceFallback: true,
+        onStart: function () {
+            if (window.getSelection) { window.getSelection().removeAllRanges(); }
+            document.body.style.userSelect = 'none';
+            document.body.style.webkitUserSelect = 'none';
+        },
         onEnd: function () {
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
             const newOrderedLists = [];
             document.querySelectorAll('#lists-container .list-block').forEach(block => {
                 const foundList = appData.lists.find(l => l.id === block.dataset.id);
@@ -627,7 +634,14 @@ function initSortableEngine() {
             animation: 120, group: 'shared-notes-group', ghostClass: 'ghost-note',
             fallbackTolerance: 3, delay: 150, delayOnTouchOnly: true,
             scroll: true, scrollSensitivity: 80, scrollSpeed: 15, forceFallback: true,
+            onStart: function () {
+                if (window.getSelection) { window.getSelection().removeAllRanges(); }
+                document.body.style.userSelect = 'none';
+                document.body.style.webkitUserSelect = 'none';
+            },
             onEnd: function (evt) {
+                document.body.style.userSelect = '';
+                document.body.style.webkitUserSelect = '';
                 const fromListId = evt.from.dataset.listId; const toListId = evt.to.dataset.listId;
                 const fromList = appData.lists.find(l => l.id === fromListId); const toList = appData.lists.find(l => l.id === toListId);
                 if (!fromList || !toList) return;
@@ -663,7 +677,7 @@ function initSortableEngine() {
 function initEventListeners() {
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-            console.log("V5.3.0 : Retour au premier plan, synchro auto...");
+            console.log("V5.4.0 : Retour au premier plan, synchro auto...");
             cleanExpiredFocus();
             renderAll();
             initialiserSynchroCloud();

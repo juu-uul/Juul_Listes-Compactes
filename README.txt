@@ -1,7 +1,7 @@
 ========================================================================
                       JUUL_LISTES-COMPACTES
 ========================================================================
-Version : v5.3.0 (Correction de l'auto-scroll mobile)
+Version : v5.4.0 (Correction de la sélection de texte au survol - Edge)
 Type    : Progressive Web App (PWA)
 Licence : Libre / Open Source
 
@@ -90,6 +90,7 @@ C. GESTION DES NOTES
 - Supprimer : Cliquez sur la croix grise (✕) à droite.
 ------------------------------------------------------------------------
 5. HISTORIQUE DES VERSIONS (CHANGELOG)
+v5.4.0 - Correction du bug de sélection de texte intempestive au survol lors du glisser-déposer (Drag & Drop) sur Edge/Chrome.
 v5.3.0 - Correction de l'auto-scroll lors du glisser-déposer sur mobile et ajout de paramètres avancés pour SortableJS.
 v5.2.0 - Ajout définitif de la propriété parentListId sur chaque note (création, dnd, fusion).
 v5.1.0 - Implémentation du cache-busting pour forcer la mise à jour des icônes PWA.
